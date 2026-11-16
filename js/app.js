@@ -329,6 +329,12 @@
       /* sandboxed viewers block downloads; Copy still works */
     }
   }
+  let framed = false;
+  try {
+    framed = window.self !== window.top;
+  } catch (e) {
+    framed = true;
+  }
   const slug = (s) =>
     String(s || 'assessor')
       .toLowerCase()
@@ -357,13 +363,17 @@
       }</p><textarea class="field code" id="x-text" readonly>${esc(text)}</textarea>`,
       actions: [
         { label: 'Close' },
-        {
-          label: 'Download file',
-          onClick: (el) => {
-            download(name, el.querySelector('#x-text').value);
-            return true;
-          },
-        },
+        ...(framed
+          ? [] // embedded viewers block downloads; Copy works everywhere
+          : [
+              {
+                label: 'Download file',
+                onClick: (el) => {
+                  download(name, el.querySelector('#x-text').value);
+                  return true;
+                },
+              },
+            ]),
         {
           label: 'Copy',
           primary: true,
