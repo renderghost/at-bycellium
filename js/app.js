@@ -1,72 +1,67 @@
 /*
- * Credence — app shell: routing, inquiry header, data menu, editors, tooltip and toast.
+ * Credence — app shell: persona switch, routing, modal, tooltip, toast,
+ * claim and evidence editors, and the Data menu (import / export).
  */
 (function () {
   const C = (window.C = window.C || {});
-  const M = C.math;
   const esc = C.esc;
   const S = C.state;
   const main = document.getElementById('main');
 
-  C.ui = { view: 'assess', claimId: null, reportClaim: null };
+  C.ui = { route: 'home', claimId: null };
 
-  /* ---------- header ---------- */
-  C.renderHeader = function () {
-    const el = document.getElementById('inq');
-    const claims = S.inquiry.claims;
-    const nEv = claims.reduce((a, c) => a + c.evidence.length, 0);
-    const people = C.people(Object.keys(S.me.ratings).length > 0).length;
-    const mine = claims.filter((c) => {
-      const r = S.me.ratings[c.id];
-      return r && r.prior != null;
-    }).length;
-    el.innerHTML = `<div class="wrap inq">
-      <div class="inq-row">
-        <div class="inq-main">
-          <p class="eyebrow">${esc(S.inquiry.field || 'Inquiry')}</p>
-          <h1 class="inq-title">${esc(S.inquiry.title || 'Untitled inquiry')}</h1>
-          ${S.inquiry.description ? `<p class="inq-desc">${esc(S.inquiry.description)}</p>` : ''}
-        </div>
-        <div class="inq-meta">
-          <span><b class="num">${claims.length}</b>claims</span>
-          <span><b class="num">${nEv}</b>pieces of evidence</span>
-          <span><b class="num">${people}</b>assessors</span>
-          <span><b class="num">${mine}/${claims.length}</b>rated by you</span>
-        </div>
-      </div>
-      ${
-        C.sampleActive()
-          ? `<div class="notice"><span class="notice-ico" aria-hidden="true">!</span><span><b>Sample inquiry.</b> The studies are real; the 20 assessors and their ratings are fictional, simulated to show how a panel reads. Turn the sample panel off in <button class="btn-link" data-act="open-data">Data</button> when running with real people.</span></div>`
-          : ''
-      }
-    </div>`;
+  /* ---------- persona ---------- */
+  function syncPersona() {
+    const p = S.settings.persona;
+    document.querySelectorAll('.persona-switch [data-persona]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.persona === p)));
+    document.body.dataset.viewAs = p;
+  }
+  C.setPersona = function (p) {
+    if (p !== 'expert' && p !== 'funder') return;
+    S.settings.persona = p;
+    C.save();
+    syncPersona();
+    // the report is for funders: send experts back to the claims
+    if (p === 'expert' && location.hash === '#question-report') location.hash = 'question';
+    else route();
+    C.toast(p === 'funder' ? 'Funder view: panel results, profiles and the report are open.' : 'Expert view: assess claims; each claim’s panel opens after you submit.');
   };
 
   /* ---------- routing ---------- */
   function route() {
-    const h = (location.hash || '#assess').slice(1);
-    let view = 'assess';
-    let arg = null;
-    if (h === 'report') view = 'report';
-    else if (h.startsWith('report-')) {
-      view = 'report';
-      arg = h.slice(7);
-    } else if (h === 'method') view = 'method';
-    C.ui.view = view;
-    document.querySelectorAll('.tab').forEach((t) => {
-      if (t.dataset.view === view) t.setAttribute('aria-current', 'page');
-      else t.removeAttribute('aria-current');
-    });
+    let h = (location.hash || '#home').slice(1);
+    // links from the first version of the prototype
+    if (h === 'assess') h = 'question';
+    else if (h === 'report') h = 'question-report';
+    else if (h.startsWith('report-')) h = 'claim-' + h.slice(7);
+
+    syncPersona();
     hideTip();
-    C.renderHeader();
-    if (view === 'report') C.views.report(main, arg);
-    else if (view === 'method') C.views.method(main);
-    else C.views.assess(main);
-    if (!C._firstRoute) window.scrollTo(0, 0);
-    C._firstRoute = false;
+    let nav = 'home';
+    if (h === 'question' || h === 'question-panel' || h === 'question-report') {
+      C.views.question(main, h === 'question' ? 'claims' : h.slice(9));
+      nav = 'question';
+    } else if (h.startsWith('claim-')) {
+      C.ui.claimId = h.slice(6);
+      C.views.claim(main, C.ui.claimId);
+      nav = 'question';
+    } else if (h.startsWith('assessor-')) {
+      C.views.assessor(main, h.slice(9));
+      nav = 'question';
+    } else if (h === 'method') {
+      C.views.method(main);
+      nav = 'method';
+    } else {
+      C.views.home(main);
+    }
+    document.querySelectorAll('.top-link').forEach((a) => {
+      if (a.dataset.nav === nav) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+    });
+    if (C.ui.route !== h) window.scrollTo(0, 0);
+    C.ui.route = h;
   }
   C.rerender = route;
-  C._firstRoute = true;
   window.addEventListener('hashchange', route);
 
   let resizeTimer = null;
@@ -113,7 +108,7 @@
     el.textContent = msg;
     el.hidden = false;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => (el.hidden = true), 3200);
+    toastTimer = setTimeout(() => (el.hidden = true), 3400);
   };
 
   C.copyText = function (text, okMsg) {
@@ -127,10 +122,9 @@
 
   /* ---------- modal ---------- */
   const modalRoot = document.getElementById('modal-root');
-  let lastFocus = null;
   C.modal = function (opts) {
-    lastFocus = document.activeElement;
-    modalRoot.innerHTML = `<div class="modal-back" data-close>
+    const lastFocus = document.activeElement;
+    modalRoot.innerHTML = `<div class="modal-back">
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <h2 id="modal-title">${esc(opts.title)}</h2>
         <div class="modal-body">${opts.body}</div>
@@ -143,21 +137,21 @@
     const close = () => {
       modalRoot.innerHTML = '';
       document.removeEventListener('keydown', onKey);
-      if (lastFocus && lastFocus.focus) lastFocus.focus();
+      if (lastFocus && lastFocus.focus && document.body.contains(lastFocus)) lastFocus.focus();
     };
     const onKey = (e) => {
       if (e.key === 'Escape') close();
     };
     document.addEventListener('keydown', onKey);
     back.addEventListener('click', (e) => {
-      if (e.target === back) close();
+      if (e.target === back) return close();
       const b = e.target.closest('[data-mact]');
       if (!b) return;
       const a = opts.actions[+b.dataset.mact];
       if (!a.onClick) return close();
       try {
         const keep = a.onClick(back);
-        if (keep !== true) close();
+        if (keep !== true && modalRoot.firstElementChild === back) close();
       } catch (err) {
         const el = back.querySelector('#modal-err');
         el.textContent = err.message;
@@ -192,7 +186,8 @@
       )}" placeholder="e.g. Compound X slows disease Y in humans"></div>
         <div class="form-row"><label for="f-stmt">Precise statement (optional)</label><textarea class="field" id="f-stmt" rows="3" placeholder="What exactly would have to be true?">${esc(
           claim ? claim.statement : ''
-        )}</textarea></div>`,
+        )}</textarea></div>
+        ${isNew ? '<p class="fine">Who should be able to add claims is still an open question for the Bycelium team. In this prototype, experts and funders both can.</p>' : ''}`,
       actions: [
         { label: 'Cancel' },
         {
@@ -205,14 +200,14 @@
             if (isNew) {
               const c = { id: C.uid('c-'), title, statement, evidence: [] };
               S.inquiry.claims.push(c);
-              C.ui.claimId = c.id;
+              C.save();
+              location.hash = 'claim-' + c.id;
             } else {
               claim.title = title;
               claim.statement = statement;
+              C.save();
+              route();
             }
-            C.save();
-            if (location.hash !== '#assess' && location.hash !== '') location.hash = 'assess';
-            else route();
           },
         },
       ],
@@ -222,7 +217,7 @@
   C.deleteClaim = function (claim) {
     C.modal({
       title: 'Delete this claim?',
-      body: `<p>${esc(claim.title)}</p><p class="step-hint">Its evidence and everyone’s ratings for it will be removed from this browser.</p>`,
+      body: `<p>${esc(claim.title)}</p><p class="step-hint">Its evidence and your assessment of it will be removed from this browser.</p>`,
       actions: [
         { label: 'Keep it' },
         {
@@ -231,9 +226,8 @@
           onClick: () => {
             S.inquiry.claims = S.inquiry.claims.filter((c) => c !== claim);
             delete S.me.ratings[claim.id];
-            C.ui.claimId = null;
             C.save();
-            route();
+            location.hash = 'question';
           },
         },
       ],
@@ -291,28 +285,13 @@
     });
   };
 
-  C.deleteEvidence = function (claim, e) {
-    C.modal({
-      title: 'Remove this evidence?',
-      body: `<p>${esc(e.title)}</p>`,
-      actions: [
-        { label: 'Keep it' },
-        {
-          label: 'Remove',
-          primary: true,
-          onClick: () => {
-            claim.evidence = claim.evidence.filter((x) => x !== e);
-            const r = S.me.ratings[claim.id];
-            if (r && r.ev) delete r.ev[e.id];
-            C.save();
-            route();
-          },
-        },
-      ],
-    });
-  };
-
   /* ---------- export / import ---------- */
+  let framed = false;
+  try {
+    framed = window.self !== window.top;
+  } catch (e) {
+    framed = true;
+  }
   function download(name, text) {
     try {
       const blob = new Blob([text], { type: 'application/json' });
@@ -326,14 +305,8 @@
         a.remove();
       }, 500);
     } catch (e) {
-      /* sandboxed viewers block downloads; Copy still works */
+      /* blocked: Copy still works */
     }
-  }
-  let framed = false;
-  try {
-    framed = window.self !== window.top;
-  } catch (e) {
-    framed = true;
   }
   const slug = (s) =>
     String(s || 'assessor')
@@ -343,33 +316,36 @@
       .slice(0, 40) || 'assessor';
 
   C.openExport = function (what) {
-    const data = what === 'mine' ? C.exportMine() : C.exportInquiry();
-    const text = JSON.stringify(data, null, 2);
-    const name = what === 'mine' ? `credence-ratings-${slug(S.me.name)}.json` : `credence-inquiry-${slug(S.inquiry.title)}.json`;
-    const nameField =
-      what === 'mine'
-        ? `<div class="form-grid"><div class="form-row"><label for="x-name">Your name</label><input class="field" id="x-name" value="${esc(
-            S.me.name
-          )}" placeholder="So the facilitator knows whose file this is"></div><div class="form-row"><label for="x-disc">Your field</label><input class="field" id="x-disc" value="${esc(
-            S.me.discipline
-          )}"></div></div>`
-        : '';
+    const mine = what === 'mine';
+    if (mine && !C.anyComplete()) {
+      C.modal({
+        title: 'Nothing to export yet',
+        body: '<p class="step-hint">Submit at least one assessment first. Only submitted assessments are exported.</p>',
+        actions: [{ label: 'Close', primary: true }],
+      });
+      return;
+    }
+    const text = JSON.stringify(mine ? C.exportMine() : C.exportInquiry(), null, 2);
+    const name = mine ? `credence-ratings-${slug(S.me.name)}.json` : `credence-question-${slug(S.inquiry.title)}.json`;
     C.modal({
-      title: what === 'mine' ? 'Export my ratings' : 'Export the whole inquiry',
-      body: `${nameField}<p class="step-hint">${
-        what === 'mine'
-          ? 'Send this file (or the copied text) to your facilitator. They import it to add you to the panel.'
-          : 'Includes claims, evidence and every imported rating. Share it so another team can continue or audit the inquiry.'
+      title: mine ? 'Export my assessments' : 'Export the whole question',
+      body: `<p class="step-hint">${
+        mine
+          ? `Includes your profile and ${Object.keys(C.myDoneRatings()).length} submitted assessment(s). Send this file, or the copied text, to your facilitator.${
+              S.me.name ? '' : ' <b>Add your name in your profile first</b> so they know whose it is.'
+            }`
+          : 'Includes claims, evidence and every imported assessment. Share it so another team can continue or audit the question.'
       }</p><textarea class="field code" id="x-text" readonly>${esc(text)}</textarea>`,
       actions: [
         { label: 'Close' },
+        ...(mine ? [{ label: 'Edit profile', onClick: () => setTimeout(C.editProfile, 0) }] : []),
         ...(framed
-          ? [] // embedded viewers block downloads; Copy works everywhere
+          ? []
           : [
               {
                 label: 'Download file',
-                onClick: (el) => {
-                  download(name, el.querySelector('#x-text').value);
+                onClick: () => {
+                  download(name, text);
                   return true;
                 },
               },
@@ -377,29 +353,17 @@
         {
           label: 'Copy',
           primary: true,
-          onClick: (el) => {
-            C.copyText(el.querySelector('#x-text').value, 'Copied. Paste it into a message to your facilitator.');
+          onClick: () => {
+            C.copyText(text, 'Copied. Paste it into a message to your facilitator.');
           },
         },
       ],
-      onOpen: (el) => {
-        const upd = () => {
-          S.me.name = el.querySelector('#x-name').value;
-          S.me.discipline = el.querySelector('#x-disc').value;
-          C.save();
-          el.querySelector('#x-text').value = JSON.stringify(C.exportMine(), null, 2);
-        };
-        if (what === 'mine') {
-          el.querySelector('#x-name').addEventListener('input', upd);
-          el.querySelector('#x-disc').addEventListener('input', upd);
-        }
-      },
     });
   };
 
   C.openImport = function () {
     C.modal({
-      title: 'Import ratings or an inquiry',
+      title: 'Import assessments or a question',
       body: `<p class="step-hint">Choose one or more files exported from Credence, or paste the text of one.</p>
         <input type="file" id="i-files" accept="application/json,.json" multiple class="field">
         <textarea class="field code" id="i-text" placeholder="…or paste exported text here"></textarea>`,
@@ -447,22 +411,21 @@
   };
 
   C.openData = function () {
-    const sampleInq = S.inquiry.sample;
     const nImp = S.imported.assessors.length;
     C.modal({
       title: 'Data',
       body: `<div class="menu-list">
         ${
-          sampleInq
-            ? `<div class="menu-item"><div><h4>Illustrative panel</h4><p>20 fictional assessors with simulated ratings. Turn off when your real panel is in.</p></div>
+          S.inquiry.sample
+            ? `<div class="menu-item"><div><h4>Illustrative panel</h4><p>20 fictional assessors with simulated assessments. Turn off when your real panel is in.</p></div>
           <button class="switch" role="switch" aria-checked="${S.settings.useSample}" id="d-sample" aria-label="Include illustrative panel"></button></div>`
             : ''
         }
-        <div class="menu-item"><div><h4>Export my ratings</h4><p>A small file to send to your facilitator.</p></div><button class="btn-ghost sm" id="d-exp-mine">Export</button></div>
-        <div class="menu-item"><div><h4>Import ratings or an inquiry</h4><p>${nImp} imported assessor${nImp === 1 ? '' : 's'} so far.</p></div><button class="btn-ghost sm" id="d-imp">Import</button></div>
-        <div class="menu-item"><div><h4>Export the whole inquiry</h4><p>Claims, evidence and all ratings, to hand to another team.</p></div><button class="btn-ghost sm" id="d-exp-all">Export</button></div>
-        <div class="menu-item"><div><h4>Start a blank inquiry</h4><p>For your own field. Removes the sample claims from this browser.</p></div><button class="btn-ghost sm" id="d-blank">Start</button></div>
-        <div class="menu-item"><div><h4>Restore the sample</h4><p>Bring back the Alzheimer’s inquiry and clear your ratings and imports.</p></div><button class="btn-ghost sm" id="d-reset">Restore</button></div>
+        <div class="menu-item"><div><h4>Your profile</h4><p>Name, field, links and declared interests shown with your assessments.</p></div><button class="btn-ghost sm" id="d-profile">Edit</button></div>
+        <div class="menu-item"><div><h4>Export my assessments</h4><p>A small file to send to your facilitator.</p></div><button class="btn-ghost sm" id="d-exp-mine">Export</button></div>
+        <div class="menu-item"><div><h4>Import assessments or a question</h4><p>${nImp} imported assessor${nImp === 1 ? '' : 's'} so far.</p></div><button class="btn-ghost sm" id="d-imp">Import</button></div>
+        <div class="menu-item"><div><h4>Export the whole question</h4><p>Claims, evidence and all assessments, to hand to another team.</p></div><button class="btn-ghost sm" id="d-exp-all">Export</button></div>
+        <div class="menu-item"><div><h4>Restore the sample</h4><p>Bring back the Alzheimer’s question and clear your assessments and imports.</p></div><button class="btn-ghost sm" id="d-reset">Restore</button></div>
       </div>`,
       actions: [{ label: 'Done', primary: true }],
       onOpen: (el) => {
@@ -474,36 +437,43 @@
             C.save();
             route();
           });
+        el.querySelector('#d-profile').addEventListener('click', () => C.editProfile());
         el.querySelector('#d-exp-mine').addEventListener('click', () => C.openExport('mine'));
         el.querySelector('#d-exp-all').addEventListener('click', () => C.openExport('all'));
         el.querySelector('#d-imp').addEventListener('click', () => C.openImport());
-        el.querySelector('#d-blank').addEventListener('click', () => confirmBlank());
         el.querySelector('#d-reset').addEventListener('click', () => confirmReset());
       },
     });
   };
 
-  function confirmBlank() {
+  function newQuestion() {
     C.modal({
-      title: 'Start a blank inquiry?',
-      body: `<div class="form-row"><label for="b-title">Question your panel will examine</label><input class="field" id="b-title" placeholder="e.g. Is the gut–brain axis a real driver of Parkinson’s?"></div>
+      title: 'Start a new question',
+      body: `<div class="form-row"><label for="b-title">Question your panel will examine</label><input class="field" id="b-title" placeholder="e.g. Does the gut microbiome drive Parkinson’s disease?"></div>
         <div class="form-row"><label for="b-field">Field</label><input class="field" id="b-field" placeholder="e.g. Neurodegeneration · Life sciences"></div>
-        <p class="step-hint">The sample claims and your ratings of them will be removed from this browser. You can restore the sample later.</p>`,
+        <div class="form-row"><label for="b-desc">Why it matters (optional)</label><textarea class="field" id="b-desc" rows="2"></textarea></div>
+        <p class="step-hint">This prototype holds one live question per browser, so the sample question and your assessments of it will be replaced. You can restore the sample from Data.</p>`,
       actions: [
         { label: 'Cancel' },
         {
-          label: 'Start blank inquiry',
+          label: 'Start question',
           primary: true,
           onClick: (el) => {
-            const title = el.querySelector('#b-title').value.trim() || 'Untitled inquiry';
-            S.inquiry = { id: C.uid('inq-'), sample: false, field: el.querySelector('#b-field').value.trim() || 'Inquiry', title, description: '', claims: [] };
+            const title = el.querySelector('#b-title').value.trim();
+            if (!title) throw new Error('Write the question first.');
+            S.inquiry = {
+              id: C.uid('inq-'),
+              sample: false,
+              field: el.querySelector('#b-field').value.trim() || 'Inquiry',
+              title,
+              description: el.querySelector('#b-desc').value.trim(),
+              claims: [],
+            };
             S.me.ratings = {};
             S.imported = { assessors: [], ratings: {} };
-            S.settings.revealed = {};
-            C.ui.claimId = null;
             C.save();
-            location.hash = 'assess';
-            route();
+            if (location.hash === '#question') route();
+            else location.hash = 'question';
           },
         },
       ],
@@ -512,8 +482,8 @@
 
   function confirmReset() {
     C.modal({
-      title: 'Restore the sample inquiry?',
-      body: `<p class="step-hint">Your ratings, imported assessors and any claims you added will be removed from this browser.</p>`,
+      title: 'Restore the sample question?',
+      body: `<p class="step-hint">Your assessments, imported assessors and any claims you added will be removed from this browser. Your profile stays.</p>`,
       actions: [
         { label: 'Cancel' },
         {
@@ -521,9 +491,9 @@
           primary: true,
           onClick: () => {
             C.resetAll();
-            C.ui.claimId = null;
+            location.hash = 'question';
             route();
-            C.toast('Sample inquiry restored.');
+            C.toast('Sample question restored.');
           },
         },
       ],
@@ -532,9 +502,31 @@
 
   /* ---------- global actions ---------- */
   document.addEventListener('click', (ev) => {
+    const persona = ev.target.closest('button[data-persona]');
+    if (persona) {
+      const wasHome = !location.hash || location.hash === '#home';
+      C.setPersona(persona.dataset.persona);
+      if (wasHome && persona.classList.contains('pcard')) location.hash = 'question';
+      return;
+    }
+    const assess = ev.target.closest('[data-assess]');
+    if (assess) {
+      C.openWizard(assess.dataset.assess, assess.dataset.step);
+      return;
+    }
     const t = ev.target.closest('[data-act]');
     if (!t) return;
-    if (t.dataset.act === 'open-data') C.openData();
+    const claim = C.ui.claimId && C.claim(C.ui.claimId);
+    const act = t.dataset.act;
+    if (act === 'open-data') C.openData();
+    else if (act === 'new-question') newQuestion();
+    else if (act === 'add-claim') C.editClaim(null);
+    else if (act === 'edit-claim' && claim) C.editClaim(claim);
+    else if (act === 'del-claim' && claim) C.deleteClaim(claim);
+    else if (act === 'add-ev' && claim) C.editEvidence(claim, null);
+    else if (act === 'edit-profile') C.editProfile();
+    else if (act === 'copy-summary') C.copyText(C.summaryText(), 'Summary copied. Paste it into your memo.');
+    else if (act === 'copy-claim') C.copyText(C.summaryText(t.dataset.claimId), 'Claim summary copied.');
   });
 
   route();

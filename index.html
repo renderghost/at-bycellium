@@ -17,7 +17,7 @@
   <body>
     <header class="topbar">
       <div class="wrap topbar-inner">
-        <a class="brand" href="#assess" aria-label="Credence home">
+        <a class="brand" href="#home" aria-label="Credence: all questions">
           <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
             <rect width="26" height="26" rx="7" style="fill:var(--ink)" />
             <line x1="5" y1="17" x2="21" y2="17" style="stroke:var(--bg)" stroke-width="2" stroke-linecap="round" opacity=".45" />
@@ -28,18 +28,18 @@
           Credence
           <span class="brand-tag">prototype</span>
         </a>
-        <nav class="tabs" aria-label="Views">
-          <a class="tab" data-view="assess" href="#assess">Assess <span class="tab-sub">experts</span></a>
-          <a class="tab" data-view="report" href="#report">Report <span class="tab-sub">funders</span></a>
-          <a class="tab" data-view="method" href="#method">Method</a>
-        </nav>
-        <div class="top-actions">
-          <button class="btn-ghost sm" data-act="open-data">Data</button>
+        <div class="persona-switch" role="group" aria-label="View as">
+          <span class="ps-label">View as</span>
+          <button type="button" class="ps-btn" data-persona="expert" aria-pressed="true">Expert</button>
+          <button type="button" class="ps-btn" data-persona="funder" aria-pressed="false">Funder</button>
         </div>
+        <nav class="top-nav" aria-label="Site">
+          <a class="top-link" data-nav="method" href="#method">Method</a>
+          <button type="button" class="top-link" data-act="open-data">Data</button>
+        </nav>
       </div>
     </header>
 
-    <div id="inq"></div>
     <main id="main" class="wrap"></main>
     <footer class="wrap foot">
       Credence is a design prototype for weighing scientific evidence as a panel. Sample studies are real; sample assessors and ratings are simulated.
@@ -51,8 +51,12 @@
     <script src="js/sample-data.js"></script>
     <script src="js/model.js"></script>
     <script src="js/charts.js"></script>
-    <script src="js/assess.js"></script>
-    <script src="js/report.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/wizard.js"></script>
+    <script src="js/home.js"></script>
+    <script src="js/question.js"></script>
+    <script src="js/claim.js"></script>
+    <script src="js/profile.js"></script>
     <script src="js/method.js"></script>
     <script src="js/app.js"></script>
   </body>

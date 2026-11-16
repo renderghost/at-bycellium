@@ -60,7 +60,8 @@
   /* ------------------------------------------------------------------
    * Belief path: the assessor's own reasoning, read top to bottom.
    * ------------------------------------------------------------------ */
-  C_.beliefPath = function (el, claim, mine, panel) {
+  C_.beliefPath = function (el, claim, mine, panel, opts) {
+    opts = opts || {};
     const W = Math.max(260, el.clientWidth || 340);
     const padL = 12;
     const padR = 12;
@@ -106,7 +107,9 @@
         panelPts.push([x(pc), my]);
       }
       if (!r || r.s == null) {
-        svg += `<text x="${padL}" y="${y + 13}" class="p-label mute">${esc(truncate(e.title, chars - 10))} · not rated</text>`;
+        const what = r && r.skipped ? 'skipped' : opts.pending || 'not rated';
+        svg += `<g class="p-row${opts.hot === e.id ? ' is-hot' : ''}" data-ev="${esc(e.id)}"><rect x="0" y="${y + 1}" width="${W}" height="${RH - 2}" class="p-hit"/>`;
+        svg += `<text x="${padL}" y="${y + 13}" class="p-label mute">${esc(truncate(e.title, chars - 10))} · ${what}</text></g>`;
         svg += `<line x1="${r1(prevX)}" x2="${r1(prevX)}" y1="${prevY + 6}" y2="${my + 6}" class="p-conn"/>`;
         prevY = my;
         y += RH;
@@ -118,7 +121,7 @@
       const x2 = x(cum + impact);
       const word = M.strengthLabel(impact);
       svg += `<line x1="${r1(x1)}" x2="${r1(x1)}" y1="${prevY + 6}" y2="${my}" class="p-conn"/>`;
-      svg += `<g class="p-row" data-ev="${esc(e.id)}" data-tip="${esc('<b>' + e.title + '</b><br>' + word + ' · ' + M.pctDb(cum) + ' → ' + M.pctDb(cum + impact))}">`;
+      svg += `<g class="p-row${opts.hot === e.id ? ' is-hot' : ''}" data-ev="${esc(e.id)}" data-tip="${esc('<b>' + e.title + '</b><br>' + word + ' · ' + M.pctDb(cum) + ' → ' + M.pctDb(cum + impact))}">`;
       svg += `<rect x="0" y="${y + 1}" width="${W}" height="${RH - 2}" class="p-hit"/>`;
       svg += `<text x="${padL}" y="${y + 13}" class="p-label">${esc(truncate(e.title, chars))}</text>`;
       if (Math.abs(x2 - x1) < 3) {
@@ -145,7 +148,9 @@
       svg += `<text x="${r1(last[0])}" y="${my + 22}" class="p-label mute" text-anchor="${anchor}">Panel median · ${M.pctDb(pc)}</text>`;
     }
     const endX = x(cum);
-    svg += `<text x="${padL}" y="${y + 13}" class="p-label strong">Your conclusion · ${M.pctDb(cum)} · ${esc(M.verbalDb(cum))}</text>`;
+    const unfinished = items.some((e) => !(mine.ev && mine.ev[e.id] && (mine.ev[e.id].s != null || mine.ev[e.id].skipped)));
+    const endLabel = opts.pending && unfinished ? 'So far' : 'Your conclusion';
+    svg += `<text x="${padL}" y="${y + 13}" class="p-label strong">${endLabel} · ${M.pctDb(cum)} · ${esc(M.verbalDb(cum))}</text>`;
     svg += `<circle cx="${r1(endX)}" cy="${my}" r="7.5" class="p-end"/>`;
     svg += `</svg>`;
     el.innerHTML = svg;
@@ -415,6 +420,44 @@
       svg += `<circle cx="${mx}" cy="${yc}" r="5.5" class="s-me"/>`;
     }
     svg += `<text x="8" y="${H - 1}" class="g-tick">opposes</text><text x="${W - 8}" y="${H - 1}" class="g-tick" text-anchor="end">supports</text>`;
+    svg += `</svg>`;
+    el.innerHTML = svg;
+  };
+
+  /* ------------------------------------------------------------------
+   * Step meter: inside the assessment form, where you are and how this
+   * finding moves you.
+   * ------------------------------------------------------------------ */
+  C_.stepMeter = function (el, before, after) {
+    const W = Math.max(240, el.clientWidth || 520);
+    const padL = 14;
+    const padR = 14;
+    const H = 58;
+    const w = W - padL - padR;
+    const x = scaleX(padL, w);
+    useTicks(w);
+    const y = 30;
+    let svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(
+      'Your belief: ' + M.pctDb(before) + (after != null ? ' to ' + M.pctDb(after) : '')
+    )}">`;
+    svg += `<line x1="${padL}" x2="${padL + w}" y1="${y}" y2="${y}" class="g-mid"/>`;
+    for (const p of TICKS) {
+      const xx = r1(x(M.toDb(p)));
+      svg += `<line x1="${xx}" x2="${xx}" y1="${y - 4}" y2="${y + 4}" class="g-mid"/><text x="${xx}" y="${H - 2}" class="g-tick" text-anchor="middle">${tickLabel(p)}</text>`;
+    }
+    const xb = x(before);
+    if (after != null && Math.abs(x(after) - xb) >= 3) {
+      svg += arrow(xb, x(after), y, after > before ? 'a-for' : 'a-against');
+      svg += `<circle cx="${r1(xb)}" cy="${y}" r="5" class="p-none"/>`;
+      svg += `<circle cx="${r1(x(after))}" cy="${y}" r="6.5" class="p-end"/>`;
+      const xa = x(after);
+      const anchor = xa > W - 60 ? 'end' : xa < 60 ? 'start' : 'middle';
+      svg += `<text x="${r1(xa)}" y="${y - 13}" class="p-label strong" text-anchor="${anchor}">${M.pctDb(after)}</text>`;
+    } else {
+      svg += `<circle cx="${r1(xb)}" cy="${y}" r="6.5" class="p-end"/>`;
+      const anchor = xb > W - 60 ? 'end' : xb < 60 ? 'start' : 'middle';
+      svg += `<text x="${r1(xb)}" y="${y - 13}" class="p-label strong" text-anchor="${anchor}">${M.pctDb(before)}</text>`;
+    }
     svg += `</svg>`;
     el.innerHTML = svg;
   };

@@ -424,5 +424,43 @@
     },
   };
 
-  C.SAMPLE = { inquiry, assessors, params, seed: 20260116 };
+  /*
+   * FICTIONAL profiles. Institutions are invented; links are placeholders and never point at real people.
+   */
+  const profiles = {
+    s01: { affiliation: 'Northbridge Institute of Neuroscience', role: 'Senior lecturer', bio: 'Runs a brain bank and has staged more than 1,200 post-mortem brains.', expertise: ['Neuropathology', 'Brain banking'], interests: '' },
+    s02: { affiliation: 'Varrow Clinical Trials Unit', role: 'Trial methodologist', bio: 'Designed two phase 3 dementia trials.', expertise: ['Trial design', 'Dementia outcomes'], interests: 'Consultancy for a company developing anti-amyloid antibodies (2021–2024)' },
+    s03: { affiliation: 'University of Calder Vale', role: 'Reader in medical statistics', bio: 'Works on outcome measures and minimal important differences.', expertise: ['Biostatistics', 'Outcome measures'], interests: '' },
+    s04: { affiliation: 'Kestrelmoor Genome Centre', role: 'Group leader', bio: 'Studies rare variants in familial Alzheimer’s disease.', expertise: ['Human genetics', 'Familial AD'], interests: '' },
+    s05: { affiliation: 'Ashgrove Imaging Centre', role: 'PET imaging scientist', bio: 'Builds analysis pipelines for amyloid and tau PET.', expertise: ['PET imaging', 'Tau PET'], interests: 'Research grant from a PET tracer manufacturer (2023)' },
+    s06: { affiliation: 'Wenlow University', role: 'Professor of virology', bio: 'Studies latent herpesviruses in the nervous system.', expertise: ['Virology', 'Herpesviruses'], interests: '' },
+    s07: { affiliation: 'Northbridge Institute of Neuroscience', role: 'Postdoctoral researcher', bio: 'Measures how amyloid-β aggregates over time.', expertise: ['Protein aggregation', 'Biophysics'], interests: '' },
+    s08: { affiliation: 'Brightwater School of Public Health', role: 'Associate professor', bio: 'Uses natural experiments in health records to estimate causal effects.', expertise: ['Epidemiology', 'Causal inference'], interests: '' },
+    s09: { affiliation: 'Independent', role: 'Retired industry pharmacologist', bio: 'Spent 25 years in central nervous system drug discovery.', expertise: ['Pharmacology', 'Drug discovery'], interests: 'Former employee of a pharmaceutical company (until 2022)' },
+    s10: { affiliation: 'University of Calder Vale', role: 'Lecturer', bio: 'Records synaptic plasticity in hippocampal slices.', expertise: ['Electrophysiology', 'Synapses'], interests: '' },
+    s11: { affiliation: 'Varrow General Hospital', role: 'Consultant geriatrician', bio: 'Runs a memory clinic for older adults.', expertise: ['Geriatric medicine', 'Memory clinics'], interests: '' },
+    s12: { affiliation: 'Wenlow University', role: 'Group leader', bio: 'Studies microglia and inflammation in neurodegeneration.', expertise: ['Neuroimmunology', 'Microglia'], interests: '' },
+    s13: { affiliation: 'Kestrelmoor Genome Centre', role: 'Senior scientist', bio: 'Models neurodegeneration in stem-cell-derived neurons.', expertise: ['Cell biology', 'iPSC models'], interests: '' },
+    s14: { affiliation: 'Ashgrove University Hospital', role: 'Clinical academic neurologist', bio: 'Prescribes and monitors anti-amyloid treatment.', expertise: ['Neurology', 'Clinical care'], interests: 'Speaker fees from two pharmaceutical companies (2024)' },
+    s15: { affiliation: 'Brightwater School of Public Health', role: 'Senior research fellow', bio: 'Evaluates the cost-effectiveness of dementia treatments.', expertise: ['Health economics', 'Health technology assessment'], interests: '' },
+    s16: { affiliation: 'Northbridge Institute of Neuroscience', role: 'Associate professor', bio: 'Studies how APP is processed by secretase enzymes.', expertise: ['Molecular neuroscience', 'APP processing'], interests: '' },
+    s17: { affiliation: 'Independent', role: 'Research integrity analyst', bio: 'Investigates image manipulation in biomedical papers.', expertise: ['Research integrity', 'Image forensics'], interests: '' },
+    s18: { affiliation: 'Ashgrove Imaging Centre', role: 'Laboratory director', bio: 'Develops blood tests for amyloid and tau.', expertise: ['Fluid biomarkers', 'Assay development'], interests: 'Co-inventor on a blood biomarker patent' },
+    s19: { affiliation: 'Wenlow University', role: 'Lecturer', bio: 'Builds network models of how disease spreads through the brain.', expertise: ['Systems biology', 'Modelling'], interests: '' },
+    s20: { affiliation: 'Varrow General Hospital', role: 'Clinical neuropsychologist', bio: 'Assesses cognition in people referred to the memory clinic.', expertise: ['Neuropsychology', 'Cognitive testing'], interests: '' },
+  };
+  for (const a of assessors) Object.assign(a, profiles[a.id], { sampleLinks: ['ORCID', 'Google Scholar', a.camp > 0 ? 'Lab website' : 'Bluesky'] });
+
+  /* FICTIONAL notes, consistent with how each assessor rated the finding. */
+  const notes = {
+    s02: { c2e3: 'Those thresholds were set for individual patients, not group averages. A 27% slowing compounds over years.' },
+    s11: { c2e3: 'Families in my clinic would not notice half a point. With the risk of brain swelling and fortnightly infusions, I doubt the net benefit.' },
+    s16: { c1e6: 'BACE1 cuts many other proteins. The worsening probably reflects those side effects, not a failure of the hypothesis.' },
+    s17: { c1e6: 'Cutting production by half or more did nothing for patients. The cascade is at best incomplete.', c4e1: 'Retracted for image manipulation. I give it no weight until another lab reproduces it.' },
+    s10: { c4e1: 'Other labs have struggled to detect Aβ*56 at all. The dimer work is more convincing.' },
+    s08: { c5e4: 'A strong design for observational data, but it is one natural experiment in one country. It needs a trial or a replication elsewhere.' },
+    s06: { c5e4: 'Fits a decade of herpesvirus findings. One study, but the strongest design we have so far.' },
+  };
+
+  C.SAMPLE = { inquiry, assessors, params, notes, seed: 20260116 };
 })();

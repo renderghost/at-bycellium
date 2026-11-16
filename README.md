@@ -18,20 +18,25 @@ node tools/build-single.js
 
 Ratings are saved in the browser (`localStorage`), so each person's work survives a reload.
 
-## The three views
+## How it is organised
 
-| View | For | What it does |
+The top bar switches between two views, **Expert** and **Funder**, and links to **Method** and **Data**.
+
+| Page | Expert | Funder |
 |---|---|---|
-| **Assess** | Experts ("assessors") | For each claim, the assessor sets a starting belief, then weighs each piece of evidence: which way it pushes, how hard, and how far they trust it. A belief path shows how each answer moves them. The panel's views stay hidden until they finish, then they see where they differ. |
-| **Report** | Funders and non-experts | A plain-language summary and one row per claim, with a dot for every assessor's conclusion. A funding map and a ranked list show where to settle a disagreement, where to fund a replication and where to explore. Each claim has a detail page showing how the evidence moved the panel and what moved it. |
-| **Method** | Everyone | How to read the numbers, how the panel is summarised, the design choices, and how to run a jam. |
+| **Questions** (home) | Lists questions; only the Alzheimer's question is live, the others are examples. | Same, with a status summary for the live question. |
+| **Question** | Overview, the claims to assess with progress, and the panel list. Either view can add claims. | Overview with a plain-language summary, every claim's panel result, the panel list, and a **Report** tab. |
+| **Assessment** | A full-screen form, one item per screen: starting belief, then each piece of evidence, then review and submit. A live belief path sits alongside. | — |
+| **Claim** | Locked until the expert submits their own assessment of that claim. Then: you and the panel, how the evidence moved the panel, what moved it, and every individual assessment. | All of that, plus the suggested funding action. |
+| **Assessor profile** | Opens after the expert's first submitted assessment. Per-claim results stay hidden until the expert has assessed that claim. | Expertise, links (ORCID, Bluesky, Scholar), declared interests, and how they assessed each claim. |
+| **Report** (question tab) | Funders only. | Summary, funding map, ranked opportunities and the numbers. |
 
 ## Running it with real people
 
-1. Write the team's claims and evidence in **Assess**, or start a blank inquiry from **Data**.
+1. Start a new question from the home page and add its claims and evidence (or import a question file from **Data**).
 2. In **Data**, turn off the illustrative panel.
-3. Each assessor rates on their own device, then uses **Export my ratings** and sends the file (or the copied text) to the facilitator.
-4. The facilitator uses **Data → Import** to load every file. The report now reflects the real panel.
+3. Each expert fills in their profile, assesses each claim on their own device, then uses **Data → Export my assessments** and sends the file (or the copied text) to the facilitator.
+4. The facilitator uses **Data → Import** to load every file. Claims, panel and report now reflect the real panel.
 
 File formats are plain JSON: `credence.ratings.v1` (one assessor) and `credence.inquiry.v1` (claims, evidence and all ratings).
 
@@ -47,20 +52,24 @@ The panel is summarised by its median and its middle half (interquartile range).
 
 ## Sample data
 
-The sample inquiry asks what drives Alzheimer's disease and whether clearing amyloid will treat it. It contains 5 claims and 30 pieces of evidence from real published studies, linked to PubMed. These include the 2006 Aβ*56 paper retracted in 2024, the lecanemab and donanemab trials, and the 2025 VALAD valacyclovir trial. **The 20 assessors and their ratings are fictional**. They are generated deterministically in `js/model.js` from the parameters in `js/sample-data.js`, to show how a real panel would read.
+The sample inquiry asks what drives Alzheimer's disease and whether clearing amyloid will treat it. It contains 5 claims and 30 pieces of evidence from real published studies, linked to PubMed. These include the 2006 Aβ*56 paper retracted in 2024, the lecanemab and donanemab trials, and the 2025 VALAD valacyclovir trial. **The 20 assessors, their profiles, notes and ratings are fictional**. Institutions are invented and profile links are placeholders. They are generated deterministically in `js/model.js` from the parameters in `js/sample-data.js`, to show how a real panel would read.
 
 ## Files
 
 ```
 index.html            app shell
 css/app.css           design tokens (light and dark) and all styles
-js/sample-data.js     sample inquiry and panel generator parameters
-js/model.js           maths, state, storage, aggregation, import/export
+js/sample-data.js     sample question, fictional profiles and notes, panel generator parameters
+js/model.js           maths, state, storage, persona gating, aggregation, import/export
 js/charts.js          hand-built SVG charts (no libraries)
-js/assess.js          Assess view
-js/report.js          Report view
-js/method.js          Method view
-js/app.js             routing, header, Data menu, editors, modal, tooltip
+js/ui.js              shared pieces: badges, avatars, credence input, strength scale
+js/wizard.js          the full-screen assessment form
+js/home.js            Questions (home)
+js/question.js        Question page: Claims, Panel and Report tabs
+js/claim.js           Claim page
+js/profile.js         Assessor profiles and "edit your profile"
+js/method.js          Method page
+js/app.js             routing, persona switch, Data menu, editors, modal, tooltip
 tools/build-single.js builds dist/credence.html
 docs/design-rationale.md  why the interface works the way it does
 ```

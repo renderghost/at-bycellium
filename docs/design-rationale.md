@@ -44,9 +44,9 @@ The manifesto calls the expert act *endorsing*, and it deliberately positions it
 1. **Words first, maths underneath.** Every number comes with a calibrated word (IPCC scale) and a natural frequency ("about 1 in 4"). Decibans appear only on the Method page.
 2. **One answer per person; uncertainty comes from the crowd.** Assessors give a single point. Disagreement is shown as the spread of the panel, which is far easier to read than one person's range.
 3. **Read in the order you reason.** The belief path runs top to bottom: start, each finding, conclusion.
-4. **Blind first, then compare.** The panel stays hidden until an assessor has weighed everything. This protects the judgements from anchoring and herding, the failure mode the market demo dramatised with its "followers".
+4. **Blind first, then compare.** A claim's panel results stay hidden until the expert submits their own assessment of it. This protects the judgements from anchoring and herding, the failure mode the market demo dramatised with its "followers".
 5. **Every chart answers a decision question.** The dot strips answer "do experts agree?", the funding map answers "where should money go?", and the impact bars answer "what is the view resting on?"
-6. **Accessible by default.** Blue supports, orange opposes; every colour has a label. All views work at phone width and in dark mode. Charts have table views.
+6. **Accessible by default.** Blue supports, orange opposes; every colour has a label. Designed for desktop first; works in dark mode. Charts have table views.
 
 ## 5. Key interactions
 
@@ -56,17 +56,31 @@ The manifesto calls the expert act *endorsing*, and it deliberately positions it
 - **Where you differ most.** After the reveal, the three findings where the assessor's weighting departs most from the panel are listed. At a jam, discussion starts there.
 - **Outline and fill bars** in the report. The outline shows how much a finding would count if fully trusted; the fill shows how much it counts today. A large gap (for example the retracted Aβ*56 paper) flags a finding worth replicating.
 
-## 6. Questions for the Bycelium team
+## 6. Page architecture
 
-1. **Units.** Should the expert-facing scale stay in plain bands, or do they want decibans visible to assessors?
-2. **Premises.** The existing diagrams treat each premise as a claim with its own credence. Is a single trust rating per finding acceptable for the jam?
-3. **Scoring.** The manifesto proposes contribution, expertise and inquiry scores. Should the jam show any scoring, or is the panel view enough for a first test?
-4. **Live data.** File export and import is enough for a facilitated jam. A shared live panel needs a small backend; is that wanted for January?
-5. **Identity.** Should assessors be named in the report, or anonymised, with discipline shown only?
+- **Top bar:** a persona switch (Expert / Funder), plus Method and Data.
+- **Questions (home):** what Credence is, a choice of view, and the list of questions. Only the Alzheimer's question is live; four examples show the life of a question, from drafting claims to a published report.
+- **Question:** an overview, then tabs. *Claims* prompts experts to assess and shows funders each claim's panel result. *Panel* lists every assessor. *Report* (funders only) holds the summary, the funding map and the ranked opportunities.
+- **Assessment:** a full-screen form that asks one thing per screen: starting belief, each piece of evidence, then a review. A live belief path stays alongside.
+- **Claim:** for funders, and for experts once they have submitted, it shows the panel result, how the evidence moved the panel, what moved it, and every individual assessment with notes.
+- **Assessor profile:** expertise, links (ORCID, Bluesky, Google Scholar), declared interests, and how they assessed each claim.
 
-## 7. Suggested next steps before January
+**Gating, as built:** an expert sees a claim's panel results only after submitting their own assessment of that claim. Profiles open after their first submitted assessment. Within a profile, results for claims the expert hasn't assessed stay hidden. This keeps each judgement blind.
+
+## 7. Questions for Mathis (founder, Bycelium)
+
+1. **Who should add claims and evidence?** In the prototype, experts and funders both can. Alternatives: experts only; the question's organiser; or anyone, with a moderation step.
+2. **When should the panel open to an expert?** Claim by claim (as built), or only once every claim on the question is assessed?
+3. **How are profiles verified?** Signing in with ORCID would confirm identity and pull in publications.
+4. **Named or anonymous?** Should funders see who said what, or disciplines only?
+5. **Units.** Should the expert-facing scale stay in plain bands, or do they want decibans visible to assessors?
+6. **Premises.** The existing diagrams treat each premise as a claim with its own credence. Is a single trust rating per finding acceptable for the jam?
+7. **Scoring.** The manifesto proposes contribution, expertise and inquiry scores. Should the jam show any scoring, or is the panel view enough for a first test?
+8. **Live data.** File export and import is enough for a facilitated jam. A shared live panel needs a small backend; is that wanted for January?
+
+## 8. Suggested next steps before January
 
 1. Run the prototype with three or four academics on the sample inquiry, and note where they hesitate.
 2. Agree the jam's field and pre-load real claims and evidence.
-3. Decide on live sync (question 4) and identity (question 5).
+3. Decide on live sync (question 8) and identity (question 4).
 4. Add a short facilitator script around the "most disputed evidence" discussion.

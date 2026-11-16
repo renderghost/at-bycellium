@@ -146,10 +146,11 @@
         for (const e of c.evidence) {
           const q = p.ev[e.id];
           if (!q) continue;
-          if (rnd() < (q.skip != null ? q.skip : 0.1)) continue; // outside their expertise
+          const noted = sample.notes && sample.notes[a.id] && sample.notes[a.id][e.id];
+          if (rnd() < (q.skip != null ? q.skip : 0.1) && !noted) continue; // outside their expertise
           const s = M.snap((q.s + (q.k || 0) * a.camp + gauss() * q.sd) * bold, STEPS);
           const t = M.snap(clamp(q.t + (q.kt || 0) * a.camp + gauss() * (q.tsd != null ? q.tsd : 0.12), 0, 1), [0, 0.33, 0.67, 1]);
-          ev[e.id] = { s, t };
+          ev[e.id] = noted ? { s, t, note: noted } : { s, t };
         }
         r[c.id] = { prior: Math.round(clamp(prior, -24, 24) * 2) / 2, ev };
       }
@@ -175,9 +176,12 @@
   const S = (C.state = {
     inquiry: saved.inquiry || clone(C.SAMPLE.inquiry),
     sampleRatings: C.generatePanel(C.SAMPLE),
-    me: saved.me || { id: uid('me-'), name: '', discipline: '', ratings: {} },
+    me: Object.assign(
+      { id: uid('me-'), name: '', discipline: '', affiliation: '', role: '', bio: '', interests: '', links: { orcid: '', bluesky: '', scholar: '', website: '' }, ratings: {} },
+      saved.me || {}
+    ),
     imported: saved.imported || { assessors: [], ratings: {} },
-    settings: Object.assign({ useSample: true, revealed: {} }, saved.settings || {}),
+    settings: Object.assign({ useSample: true, persona: 'expert' }, saved.settings || {}),
   });
 
   C.uid = uid;
@@ -196,9 +200,9 @@
 
   C.resetAll = function () {
     S.inquiry = clone(C.SAMPLE.inquiry);
-    S.me = { id: S.me.id, name: S.me.name, discipline: S.me.discipline, ratings: {} };
+    S.me.ratings = {};
     S.imported = { assessors: [], ratings: {} };
-    S.settings = { useSample: true, revealed: {} };
+    S.settings = { useSample: true, persona: S.settings.persona || 'expert' };
     C.save();
   };
 
@@ -208,6 +212,28 @@
     let r = S.me.ratings[cid];
     if (!r && create) r = S.me.ratings[cid] = { prior: null, ev: {} };
     return r || null;
+  };
+
+  /* ---------- persona & gating ---------- */
+  C.isFunder = () => S.settings.persona === 'funder';
+  C.isComplete = (cid) => !!(S.me.ratings[cid] && S.me.ratings[cid].done);
+  C.anyComplete = () => S.inquiry.claims.some((c) => C.isComplete(c.id));
+  // Experts see a claim's panel only after submitting their own assessment of it, so they judge blind.
+  C.canSeePanel = (cid) => C.isFunder() || C.isComplete(cid);
+  C.canSeeProfiles = () => C.isFunder() || C.anyComplete();
+  C.myDoneRatings = function () {
+    const out = {};
+    for (const [k, v] of Object.entries(S.me.ratings)) if (v && v.done) out[k] = v;
+    return out;
+  };
+  C.answered = function (claim) {
+    const r = S.me.ratings[claim.id];
+    let n = r && r.prior != null ? 1 : 0;
+    for (const e of claim.evidence) {
+      const x = r && r.ev && r.ev[e.id];
+      if (x && (x.s != null || x.skipped)) n++;
+    }
+    return { n, total: claim.evidence.length + 1 };
   };
 
   C.sampleActive = () => S.settings.useSample && S.inquiry.sample && S.inquiry.id === C.SAMPLE.inquiry.id;
@@ -222,9 +248,21 @@
       if (a.id === S.me.id) continue;
       list.push({ ...a, kind: 'imported', ratings: S.imported.ratings[a.id] || {} });
     }
-    if (includeMe) list.push({ id: S.me.id, name: S.me.name || 'You', discipline: S.me.discipline, isMe: true, kind: 'me', ratings: S.me.ratings });
+    if (includeMe && C.anyComplete()) list.push({ ...C.myProfile(), isMe: true, kind: 'me', ratings: C.myDoneRatings() });
     return list;
   };
+
+  C.myProfile = () => ({
+    id: S.me.id,
+    name: S.me.name || 'You',
+    discipline: S.me.discipline,
+    affiliation: S.me.affiliation,
+    role: S.me.role,
+    bio: S.me.bio,
+    interests: S.me.interests,
+    links: S.me.links,
+  });
+  C.assessor = (id) => C.people(true).find((p) => p.id === id) || (id === S.me.id ? { ...C.myProfile(), isMe: true, kind: 'me', ratings: {} } : null);
 
   C.posteriorOf = function (claim, r) {
     if (!r || r.prior == null) return null;
@@ -369,17 +407,17 @@
       format: 'credence.ratings.v1',
       exportedAt: new Date().toISOString(),
       inquiryId: S.inquiry.id,
-      assessor: { id: S.me.id, name: S.me.name || 'Anonymous', discipline: S.me.discipline || '' },
-      ratings: S.me.ratings,
+      assessor: { ...C.myProfile(), name: S.me.name || 'Anonymous' },
+      ratings: C.myDoneRatings(),
     };
   };
 
   C.exportInquiry = function () {
     const assessors = [...S.imported.assessors];
     const ratings = { ...S.imported.ratings };
-    if (Object.keys(S.me.ratings).length) {
-      assessors.push({ id: S.me.id, name: S.me.name || 'Anonymous', discipline: S.me.discipline || '' });
-      ratings[S.me.id] = S.me.ratings;
+    if (C.anyComplete()) {
+      assessors.push({ ...C.myProfile(), name: S.me.name || 'Anonymous' });
+      ratings[S.me.id] = C.myDoneRatings();
     }
     return { format: 'credence.inquiry.v1', exportedAt: new Date().toISOString(), inquiry: S.inquiry, assessors, ratings };
   };
@@ -392,7 +430,16 @@
       if (!a.id) throw new Error('The ratings file has no assessor id.');
       if (a.id === S.me.id) throw new Error('That file holds your own ratings; they are already here.');
       const i = S.imported.assessors.findIndex((x) => x.id === a.id);
-      const entry = { id: a.id, name: a.name || 'Assessor', discipline: a.discipline || '' };
+      const entry = {
+        id: a.id,
+        name: a.name || 'Assessor',
+        discipline: a.discipline || '',
+        affiliation: a.affiliation || '',
+        role: a.role || '',
+        bio: a.bio || '',
+        interests: a.interests || '',
+        links: a.links || {},
+      };
       if (i >= 0) S.imported.assessors[i] = entry;
       else S.imported.assessors.push(entry);
       S.imported.ratings[a.id] = obj.ratings || {};
