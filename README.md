@@ -8,6 +8,7 @@ It is built for a science jam: a team of around 20 academics arguing about the e
 
 There is no build step and nothing to install.
 
+- **Online:** https://renderghost.github.io/at-bycellium/ (published by GitHub Pages from `main`; only the app files are published, not `docs/` or this README).
 - **Locally:** open `index.html` in a browser, or open `dist/credence.html` (the same app as a single file you can email).
 - **Rebuild the single file** after changing anything:
 
