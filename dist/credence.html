@@ -1,0 +1,5079 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Credence</title>
+    <meta name="claude:viewport-fit-sides" content="cover" />
+    <meta name="description" content="Credence: experts weigh evidence for scientific claims; funders see where the field stands and where money would change minds." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    />
+    <style>
+/*
+ * Credence — design tokens
+ * Layout concept: a working instrument. Claims on the left, the evidence you are weighing in the middle,
+ * your belief path pinned on the right, so cause (rating) and effect (movement) are always side by side.
+ */
+:root {
+  --bg: #f3f5f7;
+  --surface: #ffffff;
+  --surface-2: #f8f9fb;
+  --sunk: #eaeef2;
+  --ink: #111823;
+  --ink-2: #455060;
+  --ink-3: #646e7d;
+  --line: #dfe4ea;
+  --line-2: #c5ccd6;
+
+  --for: #2a78d6;
+  --for-soft: #e3eefb;
+  --against: #eb6834;
+  --against-soft: #fdeae2;
+  --panel: #8d96a3;
+  --panel-soft: rgba(141, 150, 163, 0.2);
+  --me: #6250d6;
+  --me-soft: #ece9fb;
+  --accent: #4f3fc4;
+
+  --warn: #e09b00;
+  --warn-soft: #fff3d6;
+  --crit: #d03b3b;
+  --crit-soft: #fbe4e4;
+  --good: #0a8a0a;
+  --good-soft: #e2f3e2;
+  --info-soft: #e5ebf6;
+
+  --f-display: 'Instrument Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --shadow: 0 1px 2px rgba(17, 24, 35, 0.05), 0 4px 16px rgba(17, 24, 35, 0.05);
+  --top-h: 56px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0e1217;
+    --surface: #161b22;
+    --surface-2: #1b212a;
+    --sunk: #0b0e12;
+    --ink: #eef1f5;
+    --ink-2: #b6bfcb;
+    --ink-3: #8f99a7;
+    --line: #262e38;
+    --line-2: #37414d;
+    --for: #3987e5;
+    --for-soft: #16273d;
+    --against: #d95926;
+    --against-soft: #36211a;
+    --panel: #788290;
+    --panel-soft: rgba(140, 150, 165, 0.2);
+    --me: #9085e9;
+    --me-soft: #262246;
+    --accent: #a59cf0;
+    --warn: #f0b429;
+    --warn-soft: #362c12;
+    --crit: #e06464;
+    --crit-soft: #3a1b1b;
+    --good: #2fb52f;
+    --good-soft: #14301a;
+    --info-soft: #1a2335;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --bg: #0e1217;
+  --surface: #161b22;
+  --surface-2: #1b212a;
+  --sunk: #0b0e12;
+  --ink: #eef1f5;
+  --ink-2: #b6bfcb;
+  --ink-3: #8f99a7;
+  --line: #262e38;
+  --line-2: #37414d;
+  --for: #3987e5;
+  --for-soft: #16273d;
+  --against: #d95926;
+  --against-soft: #36211a;
+  --panel: #788290;
+  --panel-soft: rgba(140, 150, 165, 0.2);
+  --me: #9085e9;
+  --me-soft: #262246;
+  --accent: #a59cf0;
+  --warn: #f0b429;
+  --warn-soft: #362c12;
+  --crit: #e06464;
+  --crit-soft: #3a1b1b;
+  --good: #2fb52f;
+  --good-soft: #14301a;
+  --info-soft: #1a2335;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
+  color-scheme: dark;
+}
+
+/* ---------- base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 15px/1.5 var(--f-body);
+  font-feature-settings: 'cv11', 'ss01';
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 30;
+  background: var(--surface);
+}
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--f-display);
+  line-height: 1.2;
+  margin: 0;
+  text-wrap: balance;
+  letter-spacing: -0.01em;
+}
+p {
+  margin: 0;
+}
+a {
+  color: var(--accent);
+  text-underline-offset: 2px;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+[hidden] {
+  display: none !important;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.wrap {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+@media (min-width: 720px) {
+  .wrap {
+    padding-left: max(28px, env(safe-area-inset-left, 0px));
+    padding-right: max(28px, env(safe-area-inset-right, 0px));
+  }
+}
+.eyebrow {
+  font: 600 12px/1.3 var(--f-body);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.2;
+  text-decoration: none;
+}
+.btn:hover {
+  opacity: 0.88;
+}
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.2;
+  text-decoration: none;
+}
+.btn-ghost:hover {
+  border-color: var(--ink-3);
+}
+.btn-ghost.sm,
+.btn.sm {
+  padding: 5px 11px;
+  font-size: 13px;
+}
+.btn-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--ink-3);
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.btn-link:hover {
+  color: var(--ink);
+}
+.btn-dashed {
+  width: 100%;
+  border: 1.5px dashed var(--line-2);
+  background: transparent;
+  border-radius: var(--r-md);
+  padding: 14px;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.btn-dashed:hover {
+  border-color: var(--ink-3);
+  color: var(--ink);
+}
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 20;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: var(--top-h);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+  color: var(--ink);
+  font: 700 18px/1 var(--f-display);
+  letter-spacing: -0.02em;
+}
+.brand svg {
+  flex: none;
+}
+.brand-tag {
+  font: 500 11px/1 var(--f-mono);
+  color: var(--ink-3);
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+  padding: 3px 5px;
+  letter-spacing: 0.02em;
+}
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  background: var(--sunk);
+  padding: 3px;
+  border-radius: 999px;
+}
+.tab {
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tab[aria-current='page'] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+.tab-sub {
+  font-weight: 500;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+.top-actions {
+  display: flex;
+  gap: 8px;
+}
+@media (max-width: 760px) {
+  .brand-tag,
+  .tab-sub {
+    display: none;
+  }
+  .topbar-inner {
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-block: 8px;
+  }
+  .tabs {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+  }
+  .tab {
+    flex: 1;
+    justify-content: center;
+  }
+  .top-actions {
+    margin-left: auto;
+  }
+}
+
+/* ---------- inquiry header ---------- */
+.inq {
+  padding-block: 22px 18px;
+}
+.inq-row {
+  display: flex;
+  gap: 24px;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.inq-main {
+  min-width: 0;
+  max-width: 78ch;
+  display: grid;
+  gap: 6px;
+}
+.inq-title {
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 600;
+}
+.inq-desc {
+  color: var(--ink-2);
+  max-width: 70ch;
+}
+.inq-meta {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.inq-meta b {
+  font-family: var(--f-display);
+  font-size: 20px;
+  color: var(--ink);
+  font-weight: 600;
+  display: block;
+  line-height: 1.1;
+}
+.notice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  background: var(--warn-soft);
+  color: var(--ink);
+  font-size: 13.5px;
+  max-width: 100%;
+}
+.notice-ico {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--warn);
+  color: #111;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* ---------- assess layout ---------- */
+.assess {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 360px;
+  gap: 28px;
+  align-items: start;
+  padding-bottom: 80px;
+}
+.rail,
+.pathbox {
+  position: sticky;
+  top: calc(var(--top-h) + env(safe-area-inset-top, 0px) + 16px);
+  max-height: calc(100vh - var(--top-h) - 32px);
+  overflow: auto;
+}
+.rail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.rail-title {
+  font-size: 13px;
+  font-family: var(--f-body);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.claim-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.claim-btn {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  text-align: left;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--r-md);
+  padding: 10px 10px;
+}
+.claim-btn:hover {
+  background: var(--surface);
+}
+.claim-btn[aria-current='true'] {
+  background: var(--surface);
+  border-color: var(--line);
+  box-shadow: var(--shadow);
+}
+.cb-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--sunk);
+  font: 600 12px/1 var(--f-body);
+  color: var(--ink-2);
+}
+.claim-btn[aria-current='true'] .cb-num {
+  background: var(--ink);
+  color: var(--bg);
+}
+.cb-body {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.cb-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.cb-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.cb-prog {
+  flex: 1;
+  max-width: 64px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--sunk);
+  overflow: hidden;
+}
+.cb-prog i {
+  display: block;
+  height: 100%;
+  background: var(--me);
+  border-radius: 4px;
+}
+.cb-val {
+  font: 600 13px/1.3 var(--f-body);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.you-card {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+}
+.you-card label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.field {
+  width: 100%;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  padding: 8px 10px;
+  font-size: 14px;
+}
+.field:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+  border-color: transparent;
+}
+textarea.field {
+  resize: vertical;
+  min-height: 64px;
+}
+
+/* ---------- work column ---------- */
+.work {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.claim-head {
+  display: grid;
+  gap: 8px;
+  padding-top: 4px;
+}
+.claim-title {
+  font-size: clamp(22px, 2.3vw, 28px);
+  font-weight: 600;
+}
+.claim-statement {
+  color: var(--ink-2);
+  max-width: 68ch;
+  font-size: 15.5px;
+}
+.claim-tools {
+  display: flex;
+  gap: 14px;
+}
+.step {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.step-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.step-title {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 18px;
+  font-weight: 600;
+}
+.step-n {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  font: 600 13px/1 var(--f-body);
+  background: var(--ink);
+  color: var(--bg);
+  transform: translateY(-1px);
+}
+.step-hint {
+  color: var(--ink-2);
+  font-size: 14px;
+  max-width: 70ch;
+}
+.step-count {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* credence input */
+.cred {
+  display: grid;
+  gap: 12px;
+}
+.cred-read {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.cred-big {
+  font: 600 40px/1 var(--f-display);
+  letter-spacing: -0.02em;
+  min-width: 3.2ch;
+}
+.cred-words {
+  display: grid;
+  gap: 2px;
+}
+.cred-verbal {
+  font-weight: 600;
+}
+.cred-freq {
+  color: var(--ink-3);
+  font-size: 13.5px;
+}
+.cred.is-unset .cred-big {
+  color: var(--ink-3);
+}
+.cred-track {
+  position: relative;
+  padding-bottom: 22px;
+}
+.cred-track input[type='range'] {
+  width: 100%;
+  margin: 0;
+  height: 30px;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.cred-track input[type='range']::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--against-soft), var(--sunk) 50%, var(--for-soft));
+  border: 1px solid var(--line);
+}
+.cred-track input[type='range']::-moz-range-track {
+  height: 8px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--against-soft), var(--sunk) 50%, var(--for-soft));
+  border: 1px solid var(--line);
+}
+.cred-track input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 3px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--ink), 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.cred-track input[type='range']::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 3px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--ink);
+}
+.cred.is-unset input[type='range']::-webkit-slider-thumb {
+  background: var(--surface);
+  box-shadow: 0 0 0 1.5px var(--ink-3);
+}
+.cred.is-unset input[type='range']::-moz-range-thumb {
+  background: var(--surface);
+  box-shadow: 0 0 0 1.5px var(--ink-3);
+}
+.cred-ticks {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 18px;
+  pointer-events: none;
+}
+.cred-ticks span {
+  position: absolute;
+  transform: translateX(-50%);
+  left: calc(var(--t) * (100% - 22px) + 11px);
+  font: 500 11px/1 var(--f-mono);
+  color: var(--ink-3);
+}
+.presets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.presets-label {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-right: 2px;
+}
+.preset {
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font: 500 12.5px/1.4 var(--f-mono);
+  color: var(--ink-2);
+}
+.preset:hover {
+  border-color: var(--ink-3);
+  color: var(--ink);
+}
+.preset.is-on {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+
+/* evidence cards */
+.ev-list {
+  display: grid;
+  gap: 12px;
+}
+.ev {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+  background: var(--surface);
+  transition: border-color 0.2s;
+  scroll-margin-top: calc(var(--top-h) + 20px);
+}
+.ev.is-rated {
+  background: var(--surface-2);
+}
+.ev.is-focus {
+  border-color: var(--me);
+  box-shadow: 0 0 0 3px var(--me-soft);
+}
+.ev-top {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 12px;
+}
+.ev-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-2);
+  display: grid;
+  place-items: center;
+  font: 600 12px/1 var(--f-body);
+  color: var(--ink-2);
+}
+.ev.is-rated .ev-num {
+  background: var(--me);
+  border-color: var(--me);
+  color: #fff;
+}
+.ev-head {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.ev-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tag {
+  font: 500 11.5px/1 var(--f-body);
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--sunk);
+  color: var(--ink-2);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 600 11.5px/1 var(--f-body);
+  padding: 4px 8px 4px 5px;
+  border-radius: 999px;
+  color: var(--ink);
+}
+.badge i {
+  font-style: normal;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  color: #fff;
+}
+.badge-retracted {
+  background: var(--crit-soft);
+}
+.badge-retracted i {
+  background: var(--crit);
+}
+.badge-contested {
+  background: var(--warn-soft);
+}
+.badge-contested i {
+  background: var(--warn);
+  color: #111;
+}
+.badge-replicated {
+  background: var(--good-soft);
+}
+.badge-replicated i {
+  background: var(--good);
+}
+.badge-single,
+.badge-replication,
+.badge-other {
+  background: var(--info-soft);
+}
+.badge-single i,
+.badge-replication i,
+.badge-other i {
+  background: var(--ink-3);
+}
+.ev-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+.ev-sum {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+.ev-src {
+  font-size: 13px;
+}
+.ev-q {
+  display: grid;
+  gap: 8px;
+}
+.q-label {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+/* strength scale: a diverging segmented control */
+.scale {
+  display: grid;
+  grid-template-columns: repeat(13, minmax(0, 1fr));
+  gap: 3px;
+}
+.seg {
+  height: 32px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  padding: 0;
+  background: var(--surface);
+  position: relative;
+}
+.seg.mid {
+  background: var(--sunk);
+}
+.seg.for {
+  background: color-mix(in srgb, var(--for) var(--mix), var(--surface));
+  border-color: color-mix(in srgb, var(--for) calc(var(--mix) + 10%), var(--surface));
+}
+.seg.against {
+  background: color-mix(in srgb, var(--against) var(--mix), var(--surface));
+  border-color: color-mix(in srgb, var(--against) calc(var(--mix) + 10%), var(--surface));
+}
+.seg.lvl-1 {
+  --mix: 8%;
+}
+.seg.lvl-2 {
+  --mix: 13%;
+}
+.seg.lvl-3 {
+  --mix: 18%;
+}
+.seg.lvl-4 {
+  --mix: 23%;
+}
+.seg.lvl-5 {
+  --mix: 28%;
+}
+.seg.lvl-6 {
+  --mix: 33%;
+}
+.seg.is-fill.for {
+  background: var(--for);
+  border-color: var(--for);
+}
+.seg.is-fill.against {
+  background: var(--against);
+  border-color: var(--against);
+}
+.seg.is-on {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink);
+  z-index: 1;
+}
+.seg.mid.is-on {
+  background: var(--ink-3);
+}
+.seg:hover {
+  filter: brightness(0.95);
+}
+.scale-labels,
+.scale-dirs {
+  display: grid;
+  grid-template-columns: repeat(13, minmax(0, 1fr));
+  font: 500 10.5px/1.2 var(--f-body);
+  color: var(--ink-3);
+  gap: 3px;
+}
+.scale-labels span {
+  text-align: center;
+  white-space: nowrap;
+  grid-row: 1;
+}
+.scale-labels span:nth-child(1) {
+  grid-column: 1;
+  text-align: left;
+}
+.scale-labels span:nth-child(2) {
+  grid-column: 3;
+}
+.scale-labels span:nth-child(3) {
+  grid-column: 5;
+}
+.scale-labels span:nth-child(4) {
+  grid-column: 7;
+}
+.scale-labels span:nth-child(5) {
+  grid-column: 9;
+}
+.scale-labels span:nth-child(6) {
+  grid-column: 11;
+}
+.scale-labels span:nth-child(7) {
+  grid-column: 13;
+  text-align: right;
+}
+.scale-dirs {
+  grid-template-columns: 1fr 1fr;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.scale-dirs span:last-child {
+  text-align: right;
+}
+.readout {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  min-height: 1.5em;
+}
+.readout b {
+  color: var(--ink);
+}
+
+/* trust chips */
+.chips {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  background: var(--sunk);
+  padding: 3px;
+  border-radius: var(--r-sm);
+  max-width: 520px;
+}
+.chip {
+  border: 0;
+  background: transparent;
+  border-radius: 4px;
+  padding: 7px 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  display: grid;
+  gap: 1px;
+  text-align: center;
+}
+.chip small {
+  font-size: 10.5px;
+  color: var(--ink-3);
+  font-weight: 400;
+}
+.chip.is-on {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+}
+.chips.is-disabled {
+  opacity: 0.55;
+}
+.ev-note summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink-3);
+  width: max-content;
+}
+.ev-note textarea {
+  margin-top: 8px;
+}
+.ev-compare {
+  border-top: 1px dashed var(--line-2);
+  padding-top: 12px;
+  display: grid;
+  gap: 6px;
+}
+.ev-compare p {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.ev-tools {
+  display: flex;
+  gap: 14px;
+  justify-content: flex-end;
+}
+
+/* pathbox */
+.pathbox-inner {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 16px 14px 14px;
+  display: grid;
+  gap: 10px;
+}
+.pb-head h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.pb-sub {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+.path-chart {
+  min-height: 120px;
+}
+.path-empty {
+  border: 1.5px dashed var(--line-2);
+  border-radius: var(--r-md);
+  padding: 22px 16px;
+  color: var(--ink-3);
+  font-size: 13.5px;
+  text-align: center;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.lg i {
+  display: inline-block;
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+}
+.lg .lg-for {
+  background: var(--for);
+}
+.lg .lg-against {
+  background: var(--against);
+}
+.lg .lg-panel {
+  background: var(--panel);
+}
+.lg .lg-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--panel);
+}
+.lg .lg-me {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--me);
+}
+.lg .lg-band {
+  width: 18px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--panel-soft);
+  border: 1px solid var(--line-2);
+}
+.lg .lg-med {
+  width: 2px;
+  height: 14px;
+  background: var(--ink);
+}
+.lg .lg-pot {
+  width: 18px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1.5px solid var(--for);
+  background: transparent;
+}
+.lg .lg-fill {
+  width: 18px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--for);
+}
+.reveal-box {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--sunk);
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.reveal-box .btn-ghost {
+  justify-self: start;
+}
+
+/* compare step */
+.cmp-head {
+  display: grid;
+  gap: 4px;
+}
+.cmp-figs {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+.cmp-fig {
+  display: grid;
+  gap: 2px;
+}
+.cmp-fig span {
+  font-size: 12px;
+  color: var(--ink-3);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.cmp-fig b {
+  font: 600 28px/1.1 var(--f-display);
+}
+.cmp-fig em {
+  font-style: normal;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.diffs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.diffs li {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  font-size: 13.5px;
+}
+.diffs .d-title {
+  font-weight: 600;
+}
+.diffs .d-vs {
+  color: var(--ink-2);
+}
+.locked {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+.next-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* phone mini bar */
+.mini-bar {
+  display: none;
+}
+
+@media (max-width: 1180px) {
+  .assess {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+  .pathbox {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .work {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .rail {
+    grid-column: 1 / -1;
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+  .claim-list {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(220px, 1fr);
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  .you-card {
+    display: none;
+  }
+}
+@media (max-width: 860px) {
+  .assess {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  .pathbox {
+    position: static;
+    max-height: none;
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .work {
+    grid-row: auto;
+  }
+  .mini-bar {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 15;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px))
+      max(16px, env(safe-area-inset-left, 0px));
+    font-size: 13.5px;
+  }
+  .mini-bar b {
+    font-family: var(--f-display);
+    font-size: 18px;
+  }
+  .step {
+    padding: 16px;
+  }
+  .ev {
+    padding: 14px;
+  }
+  .ev-top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ev-num {
+    display: none;
+  }
+  .scale-labels {
+    font-size: 9.5px;
+  }
+  .seg {
+    height: 36px;
+  }
+}
+
+/* ---------- report ---------- */
+.report {
+  display: grid;
+  gap: 22px;
+  padding-bottom: 80px;
+}
+.r-intro {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 24px;
+  display: grid;
+  gap: 12px;
+}
+.r-title {
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 600;
+}
+.r-lede {
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink);
+  max-width: 72ch;
+}
+.r-lede q {
+  quotes: '“' '”';
+  font-weight: 600;
+}
+.r-status {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.r-tools {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.r-sec {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 22px 24px;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.r-sec-head {
+  display: grid;
+  gap: 6px;
+}
+.r-sec-head h3 {
+  font-size: 20px;
+  font-weight: 600;
+}
+.r-sec-head p {
+  color: var(--ink-2);
+  font-size: 14px;
+  max-width: 78ch;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 12px/1 var(--f-body);
+  padding: 5px 10px 5px 8px;
+  border-radius: 999px;
+  background: var(--sunk);
+  color: var(--ink);
+  white-space: nowrap;
+}
+.pill::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-3);
+}
+.pill-warn {
+  background: var(--warn-soft);
+}
+.pill-warn::before {
+  background: var(--warn);
+}
+.pill-info {
+  background: var(--info-soft);
+}
+.pill-info::before {
+  background: var(--for);
+}
+.pill-calm {
+  background: var(--good-soft);
+}
+.pill-calm::before {
+  background: var(--good);
+}
+.pill-mute::before {
+  background: var(--ink-3);
+}
+.pill-plain {
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.r-claims {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.rc {
+  border-top: 1px solid var(--line);
+}
+.rc:last-child {
+  border-bottom: 1px solid var(--line);
+}
+.rc-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) 150px minmax(0, 1.6fr) 170px;
+  gap: 18px;
+  align-items: center;
+  padding: 16px 8px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--r-sm);
+}
+.rc-link:hover {
+  background: var(--surface-2);
+}
+.rc-text {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+.rc-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font: 600 12.5px/1 var(--f-body);
+  background: var(--ink);
+  color: var(--bg);
+}
+.rc-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.rc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  align-items: center;
+}
+.rc-fig {
+  display: grid;
+  gap: 1px;
+}
+.rc-big {
+  font: 600 30px/1 var(--f-display);
+  letter-spacing: -0.02em;
+}
+.rc-verbal {
+  font-size: 13px;
+  font-weight: 600;
+}
+.rc-shift {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.rc-strip {
+  min-width: 0;
+}
+.act {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 13px/1.25 var(--f-body);
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+}
+.act::before {
+  content: '→';
+  color: var(--ink-3);
+}
+.act-settle,
+.act-contested {
+  border-color: var(--warn);
+  background: var(--warn-soft);
+}
+.act-explore,
+.act-open {
+  border-color: var(--for);
+  background: var(--for-soft);
+}
+.act-replicate {
+  border-color: var(--crit);
+  background: var(--crit-soft);
+}
+@media (max-width: 1100px) {
+  .rc-link {
+    grid-template-columns: minmax(0, 1fr) 140px;
+  }
+  .rc-strip {
+    grid-column: 1 / -1;
+  }
+  .rc-act {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 560px) {
+  .rc-link {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .rc-fig {
+    grid-template-columns: auto 1fr;
+    column-gap: 10px;
+    align-items: baseline;
+  }
+  .rc-big {
+    grid-row: span 2;
+  }
+  .r-intro,
+  .r-sec {
+    padding: 18px 16px;
+  }
+}
+
+.r-fund-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 980px) {
+  .r-fund-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.r-map {
+  min-width: 0;
+}
+.map-key {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+.map-key a {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--ink);
+  text-decoration: none;
+}
+.map-key a:hover {
+  text-decoration: underline;
+}
+.mk-num {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: var(--bg);
+  font: 700 11px/1 var(--f-body);
+}
+.opps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  counter-reset: opp;
+}
+.opp {
+  counter-increment: opp;
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  position: relative;
+}
+.opp-kind {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 11.5px/1 var(--f-body);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.opp-claim {
+  font: 600 11px/1 var(--f-body);
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 4px 7px;
+  border-radius: 4px;
+  background: var(--ink);
+  color: var(--bg);
+}
+.opp-settle {
+  border-left: 4px solid var(--warn);
+}
+.opp-replicate {
+  border-left: 4px solid var(--crit);
+}
+.opp-explore {
+  border-left: 4px solid var(--for);
+}
+.opp-title {
+  font-size: 15.5px;
+  font-weight: 600;
+}
+.opp-body {
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.opp-link {
+  font-size: 13px;
+  font-weight: 600;
+}
+.low-pri {
+  font-size: 13px;
+  color: var(--ink-2);
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--sunk);
+}
+
+/* claim detail */
+.back {
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  justify-self: start;
+}
+.rd-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .rd-top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.rd-num {
+  display: grid;
+  gap: 2px;
+}
+.rd-num .rc-big {
+  font-size: 56px;
+}
+.rd-verbal {
+  font-weight: 600;
+  font-size: 16px;
+}
+.rd-range {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+.rd-sentence {
+  font-size: 16px;
+  line-height: 1.55;
+  max-width: 64ch;
+}
+.rd-action {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.rd-action p {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.imp-list {
+  display: grid;
+}
+.imp-row,
+.imp-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.4fr) 150px;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.imp-head {
+  border-top: 0;
+  padding: 0 0 4px;
+}
+.imp-row.is-crux {
+  background: linear-gradient(90deg, var(--warn-soft), transparent 70%);
+}
+.imp-row.is-repl {
+  background: linear-gradient(90deg, var(--crit-soft), transparent 70%);
+}
+.imp-title {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.35;
+}
+.imp-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.imp-word {
+  font-size: 13px;
+  font-weight: 600;
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+.imp-word small {
+  font-weight: 400;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+.flag {
+  font: 700 10.5px/1 var(--f-body);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 4px 7px;
+  border-radius: 4px;
+}
+.flag-crux {
+  background: var(--warn);
+  color: #111;
+}
+.flag-repl {
+  background: var(--crit);
+  color: #fff;
+}
+@media (max-width: 760px) {
+  .imp-row,
+  .imp-head {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .imp-head > :first-child,
+  .imp-head > :last-child {
+    display: none;
+  }
+}
+.callouts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+.callout {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.callout h4 {
+  font-size: 15px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.callout.c-crux {
+  border-left: 4px solid var(--warn);
+}
+.callout.c-repl {
+  border-left: 4px solid var(--crit);
+}
+.callout.c-conv {
+  border-left: 4px solid var(--for);
+}
+
+/* tables */
+.tbl-wrap {
+  overflow-x: auto;
+}
+details.r-table summary {
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+  margin-top: 10px;
+}
+th,
+td {
+  text-align: left;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+td.num,
+th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+th {
+  font-weight: 600;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+/* ---------- method ---------- */
+.method {
+  display: grid;
+  gap: 22px;
+  padding-bottom: 80px;
+  max-width: 980px;
+}
+.prose {
+  display: grid;
+  gap: 12px;
+  max-width: 72ch;
+  align-content: start;
+}
+.prose p,
+.prose li {
+  color: var(--ink-2);
+}
+.prose ol,
+.prose ul {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: 6px;
+}
+.formula {
+  font: 500 14.5px/1.6 var(--f-mono);
+  background: var(--sunk);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  overflow-x: auto;
+  color: var(--ink);
+}
+.two-col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 22px;
+}
+
+/* ---------- modal, tooltip, toast ---------- */
+.modal-back {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 20, 0.45);
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.modal {
+  width: min(620px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+.modal h2 {
+  font-size: 20px;
+}
+.modal-body {
+  display: grid;
+  gap: 14px;
+}
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.form-row {
+  display: grid;
+  gap: 6px;
+}
+.form-row label {
+  font-size: 13px;
+  font-weight: 600;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 520px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.menu-list {
+  display: grid;
+  gap: 8px;
+}
+.menu-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.menu-item p {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.menu-item h4 {
+  font-size: 14.5px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.switch {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--line-2);
+  padding: 0;
+}
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--surface);
+  transition: transform 0.15s;
+}
+.switch[aria-checked='true'] {
+  background: var(--me);
+}
+.switch[aria-checked='true']::after {
+  transform: translateX(18px);
+}
+.code {
+  width: 100%;
+  min-height: 160px;
+  font: 12px/1.45 var(--f-mono);
+}
+.err {
+  color: var(--crit);
+  font-size: 13px;
+  font-weight: 600;
+}
+#tooltip {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  max-width: 280px;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 12.5px;
+  line-height: 1.45;
+  padding: 8px 10px;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 70;
+  background: var(--ink);
+  color: var(--bg);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  max-width: calc(100% - 32px);
+}
+@media (max-width: 860px) {
+  .toast {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+}
+.empty {
+  background: var(--surface);
+  border: 1.5px dashed var(--line-2);
+  border-radius: var(--r-lg);
+  padding: 40px 24px;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  text-align: center;
+  color: var(--ink-2);
+}
+.empty h3 {
+  color: var(--ink);
+  font-size: 20px;
+}
+footer.foot {
+  padding-block: 18px 40px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+/* ---------- SVG chart styles ---------- */
+svg {
+  display: block;
+  max-width: 100%;
+  overflow: visible;
+}
+.g-line {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.g-mid {
+  stroke: var(--line-2);
+  stroke-width: 1;
+}
+.g-tick {
+  fill: var(--ink-3);
+  font: 500 10.5px var(--f-mono);
+}
+.g-cap {
+  fill: var(--ink-3);
+  font: 500 11px var(--f-body);
+}
+.g-cap.strong {
+  fill: var(--ink-2);
+  font-weight: 600;
+}
+.p-label {
+  fill: var(--ink-2);
+  font: 500 11.5px var(--f-body);
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.p-label.strong {
+  fill: var(--ink);
+  font-weight: 600;
+}
+.p-label.mute {
+  fill: var(--ink-3);
+}
+.p-dot {
+  fill: var(--ink);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+.p-end {
+  fill: var(--me);
+  stroke: var(--surface);
+  stroke-width: 2.5;
+}
+.p-none {
+  fill: var(--surface);
+  stroke: var(--ink-3);
+  stroke-width: 1.5;
+}
+.p-conn {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+.p-hit {
+  fill: transparent;
+}
+.p-row:hover .p-hit,
+.p-row.is-hot .p-hit {
+  fill: var(--me-soft);
+}
+.p-row {
+  cursor: pointer;
+}
+.p-panel {
+  fill: none;
+  stroke: var(--panel);
+  stroke-width: 2;
+  stroke-opacity: 0.75;
+  stroke-linejoin: round;
+}
+.p-panel-end {
+  fill: var(--surface);
+  stroke: var(--panel);
+  stroke-width: 2;
+}
+.a-for-line {
+  stroke: var(--for);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.a-for-head {
+  fill: var(--for);
+}
+.a-against-line {
+  stroke: var(--against);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.a-against-head {
+  fill: var(--against);
+}
+.s-band {
+  fill: var(--panel-soft);
+}
+.s-dot {
+  fill: var(--panel);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+.s-me {
+  fill: var(--me);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+.s-me-label {
+  fill: var(--ink);
+  font: 600 10.5px var(--f-body);
+}
+.s-median {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+.s-prior {
+  fill: var(--surface);
+  stroke: var(--ink-3);
+  stroke-width: 1.5;
+}
+.z-contested {
+  fill: var(--warn-soft);
+}
+.z-false,
+.z-true {
+  fill: var(--surface-2);
+}
+.z-open {
+  fill: var(--for-soft);
+  fill-opacity: 0.6;
+}
+.z-label {
+  fill: var(--ink-2);
+  font: 600 11.5px var(--f-body);
+}
+.m-pt {
+  cursor: pointer;
+}
+.m-dot {
+  fill: var(--ink);
+  stroke: var(--surface);
+  stroke-width: 2.5;
+}
+.m-pt:hover .m-dot,
+.m-pt:focus .m-dot {
+  fill: var(--me);
+}
+.m-pt:focus {
+  outline: none;
+}
+.m-num {
+  fill: var(--bg);
+  font: 700 11px var(--f-body);
+  pointer-events: none;
+}
+.m-label {
+  fill: var(--ink);
+  font: 600 12px var(--f-body);
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.sl-row line {
+  stroke: var(--panel);
+  stroke-width: 1.2;
+  stroke-opacity: 0.55;
+}
+.sl-row circle {
+  fill: var(--panel);
+}
+.sl-row:hover line {
+  stroke: var(--ink);
+  stroke-opacity: 1;
+  stroke-width: 2;
+}
+.sl-me line {
+  stroke: var(--me);
+  stroke-width: 2.5;
+}
+.sl-me circle {
+  fill: var(--me);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+.sl-med line {
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+.sl-med circle {
+  fill: var(--ink);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+.i-pot {
+  fill: none;
+  stroke-width: 1.5;
+}
+.i-pot.i-for {
+  stroke: var(--for);
+  fill: var(--for-soft);
+  fill-opacity: 0.5;
+}
+.i-pot.i-against {
+  stroke: var(--against);
+  fill: var(--against-soft);
+  fill-opacity: 0.5;
+}
+.i-fill.i-for {
+  fill: var(--for);
+}
+.i-fill.i-against {
+  fill: var(--against);
+}
+.i-iqr {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+}
+.i-me {
+  fill: var(--me);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (forced-colors: active) {
+  .seg.is-on {
+    outline: 3px solid CanvasText;
+  }
+}
+
+</style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="wrap topbar-inner">
+        <a class="brand" href="#assess" aria-label="Credence home">
+          <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+            <rect width="26" height="26" rx="7" style="fill:var(--ink)" />
+            <line x1="5" y1="17" x2="21" y2="17" style="stroke:var(--bg)" stroke-width="2" stroke-linecap="round" opacity=".45" />
+            <path d="M7 9 L15 9" style="stroke:var(--for)" stroke-width="2.5" stroke-linecap="round" />
+            <path d="M14 6.2 L18 9 L14 11.8 Z" style="fill:var(--for)" />
+            <circle cx="18" cy="17" r="3.2" style="fill:var(--bg)" />
+          </svg>
+          Credence
+          <span class="brand-tag">prototype</span>
+        </a>
+        <nav class="tabs" aria-label="Views">
+          <a class="tab" data-view="assess" href="#assess">Assess <span class="tab-sub">experts</span></a>
+          <a class="tab" data-view="report" href="#report">Report <span class="tab-sub">funders</span></a>
+          <a class="tab" data-view="method" href="#method">Method</a>
+        </nav>
+        <div class="top-actions">
+          <button class="btn-ghost sm" data-act="open-data">Data</button>
+        </div>
+      </div>
+    </header>
+
+    <div id="inq"></div>
+    <main id="main" class="wrap"></main>
+    <footer class="wrap foot">
+      Credence is a design prototype for weighing scientific evidence as a panel. Sample studies are real; sample assessors and ratings are simulated.
+    </footer>
+
+    <div id="modal-root"></div>
+    <div id="tooltip" role="tooltip" hidden></div>
+
+    <script>
+/*
+ * Sample inquiry for the Credence prototype.
+ *
+ * The claims and evidence summaries describe real, published studies.
+ * The assessors and their ratings are FICTIONAL: they are generated from the
+ * parameters at the bottom of this file to show how a real panel might look.
+ */
+(function () {
+  const C = (window.C = window.C || {});
+
+  const pm = (term) => 'https://pubmed.ncbi.nlm.nih.gov/?term=' + encodeURIComponent(term);
+
+  const inquiry = {
+    id: 'alz-amyloid',
+    sample: true,
+    field: 'Neurodegeneration · Life sciences',
+    title: 'What drives Alzheimer’s disease, and will clearing amyloid treat it?',
+    description:
+      'Thirty years of research and most Alzheimer’s drug funding have followed the amyloid hypothesis. ' +
+      'This inquiry asks a panel how credible its core claims and its main rivals are today.',
+    claims: [
+      {
+        id: 'c1',
+        title: 'Amyloid-β build-up sets Alzheimer’s in motion',
+        statement:
+          'Accumulation of amyloid-β in the brain is the upstream cause that triggers tau pathology, neurodegeneration and dementia (the amyloid cascade hypothesis).',
+        evidence: [
+          {
+            id: 'c1e1',
+            title: 'Every known cause of inherited early-onset Alzheimer’s alters amyloid-β',
+            summary:
+              'Mutations in APP, PSEN1 and PSEN2 that cause familial early-onset Alzheimer’s all change how amyloid-β is produced or processed.',
+            source: { label: 'Hardy & Selkoe, Science', year: 2002, url: pm('Hardy Selkoe amyloid hypothesis of Alzheimer\'s disease progress and problems 2002') },
+            kind: 'Genetics',
+            status: 'Replicated',
+          },
+          {
+            id: 'c1e2',
+            title: 'An extra copy of APP in Down syndrome brings near-universal Alzheimer’s pathology',
+            summary:
+              'People with Down syndrome carry three copies of the APP gene. Alzheimer’s biomarker changes appear in a predictable order from around age 40, and most go on to develop dementia.',
+            source: { label: 'Fortea et al., Lancet', year: 2020, url: pm('Fortea Clinical and biomarker changes of Alzheimer\'s disease in adults with Down syndrome') },
+            kind: 'Cohort',
+            status: 'Replicated',
+          },
+          {
+            id: 'c1e3',
+            title: 'A rare APP variant that lowers amyloid-β protects against Alzheimer’s',
+            summary:
+              'The Icelandic A673T variant reduces amyloid-β production (by about 40% in cell studies). Carriers are protected against Alzheimer’s and age-related cognitive decline.',
+            source: { label: 'Jonsson et al., Nature', year: 2012, url: pm('Jonsson A mutation in APP protects against Alzheimer\'s disease and age-related cognitive decline') },
+            kind: 'Genetics',
+            status: 'Single study',
+          },
+          {
+            id: 'c1e4',
+            title: 'Many cognitively normal older people have amyloid plaques',
+            summary:
+              'A meta-analysis of 55 studies estimated that amyloid positivity in cognitively normal people rises from about 10% at age 50 to 44% at age 90.',
+            source: { label: 'Jansen et al., JAMA', year: 2015, url: pm('Jansen Prevalence of cerebral amyloid pathology in persons without dementia meta-analysis') },
+            kind: 'Meta-analysis',
+            status: 'Replicated',
+          },
+          {
+            id: 'c1e5',
+            title: 'Tangles, not plaques, track cognitive impairment',
+            summary:
+              'Reviews of clinico-pathological studies find that the burden of tau tangles matches cognitive status more closely than amyloid plaque burden does.',
+            source: { label: 'Nelson et al., J Neuropathol Exp Neurol', year: 2012, url: pm('Nelson Correlation of Alzheimer disease neuropathologic changes with cognitive status a review of the literature') },
+            kind: 'Pathology',
+            status: 'Replicated',
+          },
+          {
+            id: 'c1e6',
+            title: 'Blocking amyloid-β production with BACE inhibitors failed',
+            summary:
+              'Verubecestat cut amyloid-β levels in spinal fluid substantially but did not slow decline. Several BACE inhibitor trials were stopped, some showing early cognitive worsening.',
+            source: { label: 'Egan et al., NEJM', year: 2018, url: pm('Egan Randomized Trial of Verubecestat for Mild-to-Moderate Alzheimer\'s Disease') },
+            kind: 'Clinical trial',
+            status: 'Replicated',
+          },
+          {
+            id: 'c1e7',
+            title: 'Antibodies that clear amyloid modestly slow decline',
+            summary:
+              'Lecanemab and donanemab removed most plaque and slowed decline on clinical scales by roughly a quarter to a third over 18 months in early Alzheimer’s.',
+            source: { label: 'van Dyck et al., NEJM', year: 2023, url: pm('van Dyck Lecanemab in Early Alzheimer\'s Disease') },
+            kind: 'Clinical trial',
+            status: 'Replicated',
+          },
+        ],
+      },
+      {
+        id: 'c2',
+        title: 'Clearing amyloid slows decline enough to matter to patients',
+        statement:
+          'Anti-amyloid antibody treatment gives people with early Alzheimer’s a clinically meaningful benefit that outweighs its risks.',
+        evidence: [
+          {
+            id: 'c2e1',
+            title: 'Lecanemab: 27% slower decline over 18 months',
+            summary:
+              'In Clarity AD (1,795 participants), the CDR-SB dementia score worsened by 1.21 points on lecanemab and 1.66 on placebo: a 0.45-point difference.',
+            source: { label: 'van Dyck et al., NEJM', year: 2023, url: pm('van Dyck Lecanemab in Early Alzheimer\'s Disease') },
+            kind: 'Clinical trial',
+            status: 'Single study',
+          },
+          {
+            id: 'c2e2',
+            title: 'Donanemab: about 35% slower decline in people with less tau',
+            summary:
+              'In TRAILBLAZER-ALZ 2, decline on the iADRS scale was 3.25 points smaller than on placebo over 76 weeks in people with low or medium tau. The benefit was smaller across all participants.',
+            source: { label: 'Sims et al., JAMA', year: 2023, url: pm('Sims Donanemab in Early Symptomatic Alzheimer Disease TRAILBLAZER-ALZ 2') },
+            kind: 'Clinical trial',
+            status: 'Single study',
+          },
+          {
+            id: 'c2e3',
+            title: 'The benefit is smaller than common thresholds for a meaningful change',
+            summary:
+              'The 0.45-point CDR-SB difference is below published estimates of the smallest change patients would notice: roughly 1 point in mild cognitive impairment and more in mild dementia.',
+            source: { label: 'Andrews et al., Alzheimer’s & Dementia TRCI', year: 2019, url: pm('Andrews Disease severity and minimal clinically important differences in clinical outcome assessments for Alzheimer\'s disease clinical trials') },
+            kind: 'Methods',
+            status: 'Contested',
+          },
+          {
+            id: 'c2e4',
+            title: 'Brain swelling and bleeding (ARIA) are common side effects',
+            summary:
+              'Brain swelling (ARIA-E) affected about 12.6% of people on lecanemab and 24% on donanemab. Three deaths in TRAILBLAZER-ALZ 2 were judged treatment-related.',
+            source: { label: 'Sims et al., JAMA', year: 2023, url: pm('Sims Donanemab in Early Symptomatic Alzheimer Disease TRAILBLAZER-ALZ 2') },
+            kind: 'Clinical trial',
+            status: 'Replicated',
+          },
+          {
+            id: 'c2e5',
+            title: 'Solanezumab did not prevent decline in people with amyloid but no symptoms',
+            summary:
+              'The A4 study followed over 1,100 amyloid-positive, cognitively unimpaired adults for about 4.5 years. Solanezumab binds soluble amyloid-β but does not clear plaque, and showed no benefit.',
+            source: { label: 'Sperling et al., NEJM', year: 2023, url: pm('Sperling Trial of Solanezumab in Preclinical Alzheimer\'s Disease') },
+            kind: 'Clinical trial',
+            status: 'Single study',
+          },
+          {
+            id: 'c2e6',
+            title: 'Gantenerumab missed its primary endpoints',
+            summary:
+              'The twin GRADUATE I and II trials showed no significant slowing of decline. The drug removed less plaque than expected.',
+            source: { label: 'Bateman et al., NEJM', year: 2023, url: pm('Bateman Two Phase 3 Trials of Gantenerumab in Early Alzheimer\'s Disease') },
+            kind: 'Clinical trial',
+            status: 'Replicated',
+          },
+          {
+            id: 'c2e7',
+            title: 'Aducanumab’s identical twin trials disagreed',
+            summary:
+              'EMERGE reported slowing at high dose while ENGAGE did not. The drug received a contested accelerated approval in 2021 and was withdrawn by its maker in 2024.',
+            source: { label: 'Budd Haeberlein et al., J Prev Alzheimers Dis', year: 2022, url: pm('Budd Haeberlein Two Randomized Phase 3 Studies of Aducanumab in Early Alzheimer\'s Disease') },
+            kind: 'Clinical trial',
+            status: 'Contested',
+          },
+        ],
+      },
+      {
+        id: 'c3',
+        title: 'Tau, more than amyloid, drives cognitive decline',
+        statement:
+          'The spread of tau tangles is the main direct driver of neurodegeneration and symptoms, so tau should predict decline better than amyloid.',
+        evidence: [
+          {
+            id: 'c3e1',
+            title: 'Tangle burden matches cognitive status better than plaques',
+            summary:
+              'Across clinico-pathological studies, the stage and density of tau tangles correlate with cognitive impairment more closely than amyloid plaques do.',
+            source: { label: 'Nelson et al., J Neuropathol Exp Neurol', year: 2012, url: pm('Nelson Correlation of Alzheimer disease neuropathologic changes with cognitive status a review of the literature') },
+            kind: 'Pathology',
+            status: 'Replicated',
+          },
+          {
+            id: 'c3e2',
+            title: 'Tau PET predicts future decline better than amyloid PET or MRI',
+            summary:
+              'Across eight cohorts, baseline tau PET explained more of later cognitive change than amyloid PET or MRI. In amyloid-positive MCI, R² was 0.35 for tau PET and 0.17 for amyloid PET.',
+            source: { label: 'Ossenkoppele et al., JAMA Neurology', year: 2021, url: pm('Ossenkoppele Accuracy of Tau Positron Emission Tomography as a Prognostic Marker in Preclinical and Prodromal Alzheimer Disease') },
+            kind: 'Imaging',
+            status: 'Replicated',
+          },
+          {
+            id: 'c3e3',
+            title: 'Tau mutations alone can cause dementia',
+            summary:
+              'Mutations in MAPT, the tau gene, cause inherited frontotemporal dementia with tau pathology and without amyloid plaques.',
+            source: { label: 'Hutton et al., Nature', year: 1998, url: pm('Hutton Association of missense and 5\'-splice-site mutations in tau with the inherited dementia FTDP-17') },
+            kind: 'Genetics',
+            status: 'Replicated',
+          },
+          {
+            id: 'c3e4',
+            title: 'Amyloid and tau together predict decline far better than amyloid alone',
+            summary:
+              'Cognitively unimpaired people positive on both amyloid and tau PET declined much faster than those with amyloid only, suggesting the two act together.',
+            source: { label: 'Ossenkoppele et al., Nature Medicine', year: 2022, url: pm('Amyloid and tau PET-positive cognitively unimpaired individuals are at high risk for future cognitive decline') },
+            kind: 'Imaging',
+            status: 'Single study',
+          },
+          {
+            id: 'c3e5',
+            title: 'An anti-tau antibody did not slow decline',
+            summary:
+              'In the TAURIEL phase 2 trial in prodromal to mild Alzheimer’s, semorinemab did not slow clinical decline.',
+            source: { label: 'Teng et al., JAMA Neurology', year: 2022, url: pm('Teng Safety and Efficacy of Semorinemab in Individuals With Prodromal to Mild Alzheimer Disease') },
+            kind: 'Clinical trial',
+            status: 'Single study',
+          },
+        ],
+      },
+      {
+        id: 'c4',
+        title: 'Small soluble amyloid-β clumps, not plaques, do the damage',
+        statement:
+          'Soluble amyloid-β oligomers are the main toxic form in Alzheimer’s disease; insoluble plaques are comparatively inert.',
+        evidence: [
+          {
+            id: 'c4e1',
+            title: 'An oligomer called Aβ*56 impairs memory',
+            summary:
+              'Aβ*56, purified from transgenic mouse brains, impaired memory when injected into young rats. Retracted in 2024 by most of its authors after a 2022 investigation found manipulated images. The senior author still defends the finding.',
+            source: { label: 'Lesné et al., Nature (retracted)', year: 2006, url: pm('Lesne A specific amyloid-beta protein assembly in the brain impairs memory') },
+            kind: 'Lab / animal',
+            status: 'Retracted',
+          },
+          {
+            id: 'c4e2',
+            title: 'Amyloid-β dimers from Alzheimer’s brains disrupt synapses and memory',
+            summary:
+              'Soluble amyloid-β dimers extracted from patients’ brains impaired synaptic plasticity and memory in rodents. Insoluble plaque cores did not, unless dissolved to release dimers.',
+            source: { label: 'Shankar et al., Nature Medicine', year: 2008, url: pm('Shankar Amyloid-beta protein dimers isolated directly from Alzheimer\'s brains impair synaptic plasticity and memory') },
+            kind: 'Lab / animal',
+            status: 'Single study',
+          },
+          {
+            id: 'c4e3',
+            title: 'Naturally secreted oligomers block memory signalling in living animals',
+            summary:
+              'Low concentrations of naturally secreted amyloid-β oligomers inhibited hippocampal long-term potentiation in living rats; monomers did not.',
+            source: { label: 'Walsh et al., Nature', year: 2002, url: pm('Walsh Naturally secreted oligomers of amyloid beta protein potently inhibit hippocampal long-term potentiation in vivo') },
+            kind: 'Lab / animal',
+            status: 'Single study',
+          },
+          {
+            id: 'c4e4',
+            title: '“Oligomer” preparations differ widely between labs',
+            summary:
+              'A critical review found oligomer preparations are poorly characterised, vary between labs and are often tested at unrealistic concentrations.',
+            source: { label: 'Benilova, Karran & De Strooper, Nat Neurosci', year: 2012, url: pm('Benilova The toxic Abeta oligomer and Alzheimer\'s disease an emperor in need of clothes') },
+            kind: 'Review',
+            status: 'Replicated',
+          },
+          {
+            id: 'c4e5',
+            title: 'The most effective antibody targets soluble protofibrils',
+            summary:
+              'Lecanemab binds soluble amyloid-β protofibrils far more selectively than monomers, which fits soluble aggregates being a useful drug target.',
+            source: { label: 'Söderberg et al., Neurotherapeutics', year: 2023, url: pm('Soderberg Lecanemab, Aducanumab, and Gantenerumab Binding Profiles to Different Forms of Amyloid-Beta') },
+            kind: 'Lab / animal',
+            status: 'Single study',
+          },
+        ],
+      },
+      {
+        id: 'c5',
+        title: 'Herpes virus infections contribute to Alzheimer’s',
+        statement:
+          'Infection or reactivation of herpes viruses, such as HSV-1 or varicella-zoster, is a contributing cause of Alzheimer’s disease in some people.',
+        evidence: [
+          {
+            id: 'c5e1',
+            title: 'HSV-1 DNA sits inside amyloid plaques',
+            summary: 'Herpes simplex virus type 1 DNA was found located within amyloid plaques in post-mortem Alzheimer’s brains.',
+            source: { label: 'Wozniak, Mee & Itzhaki, J Pathol', year: 2009, url: pm('Wozniak Mee Itzhaki Herpes simplex virus type 1 DNA is located within Alzheimer\'s disease amyloid plaques') },
+            kind: 'Pathology',
+            status: 'Single study',
+          },
+          {
+            id: 'c5e2',
+            title: 'Amyloid-β traps herpes viruses in mice',
+            summary:
+              'In mice and cell models, amyloid-β entrapped HSV-1 and protected against infection, suggesting plaques may be an antimicrobial response.',
+            source: { label: 'Eimer et al., Neuron', year: 2018, url: pm('Eimer Alzheimer\'s Disease-Associated beta-Amyloid Is Rapidly Seeded by Herpesviridae to Protect against Brain Infection') },
+            kind: 'Lab / animal',
+            status: 'Single study',
+          },
+          {
+            id: 'c5e3',
+            title: 'Antiviral treatment linked to lower dementia risk in Taiwan',
+            summary:
+              'In a Taiwanese health-insurance cohort, people with HSV infections had a higher dementia risk, and those treated with antivirals had a lower risk than those who were not.',
+            source: { label: 'Tzeng et al., Neurotherapeutics', year: 2018, url: pm('Tzeng Anti-herpetic Medications and Reduced Risk of Dementia in Patients with Herpes Simplex Virus Infections') },
+            kind: 'Observational',
+            status: 'Single study',
+          },
+          {
+            id: 'c5e4',
+            title: 'Shingles vaccination cut new dementia diagnoses by about a fifth',
+            summary:
+              'In Wales, eligibility for shingles vaccination depended on date of birth. People just eligible were 3.5 percentage points (about 20%) less likely to receive a new dementia diagnosis over seven years.',
+            source: { label: 'Eyting et al., Nature', year: 2025, url: pm('Eyting A natural experiment on the effect of herpes zoster vaccination on dementia') },
+            kind: 'Natural experiment',
+            status: 'Single study',
+          },
+          {
+            id: 'c5e5',
+            title: 'A reported link with herpesvirus 6 did not replicate',
+            summary:
+              'A multi-cohort reanalysis found no association between human herpesvirus 6 and Alzheimer’s, failing to reproduce an earlier multi-omic report.',
+            source: { label: 'Allnutt et al., Neuron', year: 2020, url: pm('Allnutt Human Herpesvirus 6 Detection in Alzheimer\'s Disease Cases and Controls across Multiple Cohorts') },
+            kind: 'Cohort',
+            status: 'Replication',
+          },
+          {
+            id: 'c5e6',
+            title: 'Valacyclovir did not slow early Alzheimer’s',
+            summary:
+              'In the VALAD trial, 120 HSV-positive people with early Alzheimer’s took valacyclovir or placebo for 78 weeks. The drug did not help, and cognitive scores worsened slightly more than on placebo.',
+            source: { label: 'Devanand et al., JAMA (VALAD)', year: 2025, url: pm('Valacyclovir Treatment of Early Symptomatic Alzheimer Disease VALAD Randomized Clinical Trial') },
+            kind: 'Clinical trial',
+            status: 'Single study',
+          },
+        ],
+      },
+    ],
+  };
+
+  // Fictional assessors. `camp` runs from -1 (sceptical of the amyloid hypothesis) to +1 (proponent).
+  const assessors = [
+    { id: 's01', name: 'Amara', discipline: 'Neuropathology', camp: 0.6 },
+    { id: 's02', name: 'Bastien', discipline: 'Clinical trials', camp: 0.8 },
+    { id: 's03', name: 'Chen', discipline: 'Biostatistics', camp: -0.3 },
+    { id: 's04', name: 'Dalia', discipline: 'Human genetics', camp: 0.7 },
+    { id: 's05', name: 'Emeka', discipline: 'Neuroimaging', camp: 0.0 },
+    { id: 's06', name: 'Freya', discipline: 'Virology', camp: -0.8 },
+    { id: 's07', name: 'Gustavo', discipline: 'Protein biochemistry', camp: 0.4 },
+    { id: 's08', name: 'Hana', discipline: 'Epidemiology', camp: -0.4 },
+    { id: 's09', name: 'Ivo', discipline: 'Pharmacology', camp: 0.2 },
+    { id: 's10', name: 'Jun', discipline: 'Synaptic physiology', camp: 0.5 },
+    { id: 's11', name: 'Kalinda', discipline: 'Geriatric medicine', camp: -0.6 },
+    { id: 's12', name: 'Luca', discipline: 'Neuroimmunology', camp: -0.5 },
+    { id: 's13', name: 'Mireille', discipline: 'Cell biology', camp: 0.1 },
+    { id: 's14', name: 'Nikhil', discipline: 'Neurology', camp: 0.3 },
+    { id: 's15', name: 'Olufemi', discipline: 'Health economics', camp: -0.2 },
+    { id: 's16', name: 'Priya', discipline: 'Molecular neuroscience', camp: 0.6 },
+    { id: 's17', name: 'Quentin', discipline: 'Research integrity', camp: -0.7 },
+    { id: 's18', name: 'Rosa', discipline: 'Fluid biomarkers', camp: 0.2 },
+    { id: 's19', name: 'Sven', discipline: 'Systems biology', camp: -0.1 },
+    { id: 's20', name: 'Tomasz', discipline: 'Neuropsychology', camp: -0.4 },
+  ];
+
+  /*
+   * Generator parameters (all in decibans, dB = 10·log10(odds)).
+   *   prior: mu (centre), sd (spread), k (shift per unit of camp)
+   *   ev:    s (strength if true), sd, k (camp effect on strength),
+   *          t (trust 0–1), tsd, kt (camp effect on trust)
+   */
+  const params = {
+    // Contested: the amyloid camp and its sceptics read the BACE failures very differently.
+    c1: {
+      prior: { mu: 3, sd: 3, k: 5 },
+      ev: {
+        c1e1: { s: 8, sd: 2, k: 1, t: 0.95 },
+        c1e2: { s: 6, sd: 2, k: 1, t: 0.9 },
+        c1e3: { s: 5, sd: 2, k: 1, t: 0.8 },
+        c1e4: { s: -6, sd: 2, k: 2, t: 0.9 },
+        c1e5: { s: -5, sd: 2, k: 2, t: 0.9 },
+        c1e6: { s: -8, sd: 3, k: 6, t: 0.85 },
+        c1e7: { s: 6, sd: 2, k: 3, t: 0.75 },
+      },
+    },
+    // Contested: the crux is whether a 0.45-point CDR-SB difference matters to patients.
+    c2: {
+      prior: { mu: -1, sd: 3, k: 9 },
+      ev: {
+        c2e1: { s: 7, sd: 2, k: 2, t: 0.85 },
+        c2e2: { s: 7, sd: 2, k: 2, t: 0.85 },
+        c2e3: { s: -8, sd: 3, k: 10, t: 0.75 },
+        c2e4: { s: -4, sd: 2, k: 2, t: 0.95 },
+        c2e5: { s: -2, sd: 2, k: 1, t: 0.9 },
+        c2e6: { s: -2, sd: 2, k: 1, t: 0.9 },
+        c2e7: { s: -2, sd: 2, k: 1, t: 0.5, tsd: 0.2 },
+      },
+    },
+    // Broad consensus that tau tracks decline.
+    c3: {
+      prior: { mu: -1, sd: 3, k: -1.5 },
+      ev: {
+        c3e1: { s: 6, sd: 2, k: -0.5, t: 0.9 },
+        c3e2: { s: 6, sd: 2, k: -0.5, t: 0.85 },
+        c3e3: { s: 3, sd: 2, k: 0, t: 0.95 },
+        c3e4: { s: -4, sd: 2, k: 1, t: 0.85 },
+        c3e5: { s: -2, sd: 2, k: 0.5, t: 0.85 },
+      },
+    },
+    // Open, and leaning on a retracted paper that would matter a lot if it held up.
+    c4: {
+      prior: { mu: -2, sd: 3, k: 1.5 },
+      ev: {
+        c4e1: { s: 12, sd: 2, k: 1, t: 0.05, tsd: 0.1 },
+        c4e2: { s: 6, sd: 2, k: 1, t: 0.55, tsd: 0.2 },
+        c4e3: { s: 4, sd: 2, k: 1, t: 0.7 },
+        c4e4: { s: -5, sd: 2, k: 1, t: 0.8 },
+        c4e5: { s: 2, sd: 2, k: 1, t: 0.6 },
+      },
+    },
+    // Consensus leans false, but the shingles natural experiment is strong if it replicates.
+    c5: {
+      prior: { mu: -7, sd: 3, k: -1.5 },
+      ev: {
+        c5e1: { s: 3, sd: 2, k: -0.5, t: 0.55 },
+        c5e2: { s: 2, sd: 2, k: -0.5, t: 0.7 },
+        c5e3: { s: 3, sd: 2, k: -0.5, t: 0.4 },
+        c5e4: { s: 9, sd: 3, k: -1, t: 0.35, tsd: 0.15 },
+        c5e5: { s: -4, sd: 2, k: 0.5, t: 0.85 },
+        c5e6: { s: -6, sd: 2, k: 0.5, t: 0.85 },
+      },
+    },
+  };
+
+  C.SAMPLE = { inquiry, assessors, params, seed: 20260116 };
+})();
+
+</script>
+    <script>
+/*
+ * Credence — maths, state, storage and panel aggregation.
+ *
+ * Credence is stored in decibans (dB): 10 · log10(odds).
+ *   0 dB = 50%, +10 dB = 10:1 on (91%), −10 dB = 1:10 (9%).
+ * Evidence multiplies the odds, so in decibans it simply adds:
+ *   conclusion = starting belief + Σ (strength × trust)
+ */
+(function () {
+  const C = (window.C = window.C || {});
+
+  /* ---------- maths ---------- */
+  const D = 25; // charts span ±25 dB ≈ 0.3% … 99.7%
+  const STEPS = [-25, -17, -12, -7, -4, -2, 0, 2, 4, 7, 12, 17, 25];
+  const TRUST = [
+    { v: 0, label: 'Not at all', hint: 'Discount it entirely' },
+    { v: 0.33, label: 'Doubtful', hint: 'Counts for a third' },
+    { v: 0.67, label: 'Mostly', hint: 'Counts for two thirds' },
+    { v: 1, label: 'Fully', hint: 'Counts in full' },
+  ];
+
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  const M = (C.math = {
+    D,
+    STEPS,
+    TRUST,
+    clamp,
+    toDb(p) {
+      p = clamp(p, 1e-9, 1 - 1e-9);
+      return 10 * Math.log10(p / (1 - p));
+    },
+    toP(db) {
+      return 1 / (1 + Math.pow(10, -db / 10));
+    },
+    factor(db) {
+      return Math.pow(10, db / 10);
+    },
+    pct(p) {
+      const v = p * 100;
+      if (v < 1) return (v < 0.1 ? '<0.1' : v.toFixed(1)) + '%';
+      if (v > 99) return (v > 99.9 ? '>99.9' : v.toFixed(1)) + '%';
+      return Math.round(v) + '%';
+    },
+    pctDb(db) {
+      return M.pct(M.toP(db));
+    },
+    chance(p) {
+      const n = (x) => (x >= 1000 ? Math.round(x / 100) * 100 : x).toLocaleString('en-GB');
+      if (p <= 0.5) {
+        const k = Math.round(1 / p);
+        return k <= 2 ? 'about 1 in 2' : 'about 1 in ' + n(k);
+      }
+      const k = Math.round(1 / (1 - p));
+      return k <= 2 ? 'about 1 in 2' : 'about ' + n(k - 1) + ' in ' + n(k);
+    },
+    // IPCC calibrated language: familiar to scientists and readable by funders.
+    verbal(p) {
+      // judge the rounded value people actually see, so “90%” never reads “Likely”
+      if (p > 0.01 && p < 0.99) p = Math.round(p * 100) / 100;
+      if (p >= 0.99) return 'Virtually certain';
+      if (p >= 0.95) return 'Extremely likely';
+      if (p >= 0.9) return 'Very likely';
+      if (p >= 0.66) return 'Likely';
+      if (p > 0.33) return 'About as likely as not';
+      if (p > 0.1) return 'Unlikely';
+      if (p > 0.05) return 'Very unlikely';
+      if (p > 0.01) return 'Extremely unlikely';
+      return 'Exceptionally unlikely';
+    },
+    verbalDb(db) {
+      return M.verbal(M.toP(db));
+    },
+    // Jeffreys-style bands, as used by the existing evidence diagrams.
+    strengthWord(db) {
+      const a = Math.abs(db);
+      if (a < 1) return 'No effect';
+      if (a < 3) return 'Anecdotal';
+      if (a < 5) return 'Weak';
+      if (a < 10) return 'Moderate';
+      if (a < 15) return 'Strong';
+      if (a < 20) return 'Very strong';
+      return 'Decisive';
+    },
+    strengthLabel(db) {
+      const w = M.strengthWord(db);
+      if (w === 'No effect') return 'No effect';
+      return w + (db > 0 ? ' support' : ' opposition');
+    },
+    factorText(db) {
+      if (Math.abs(db) < 1) return 'leaves the odds unchanged';
+      const f = M.factor(Math.abs(db));
+      const r = f >= 20 ? Math.round(f / 10) * 10 : f >= 3 ? Math.round(f) : Math.round(f * 10) / 10;
+      return (db > 0 ? 'multiplies the odds by about ' : 'divides the odds by about ') + r.toLocaleString('en-GB');
+    },
+    trustLabel(t) {
+      let best = TRUST[0];
+      for (const x of TRUST) if (Math.abs(x.v - t) < Math.abs(best.v - t)) best = x;
+      return best.label;
+    },
+    snap(v, arr) {
+      let best = arr[0];
+      for (const x of arr) if (Math.abs(x - v) < Math.abs(best - v)) best = x;
+      return best;
+    },
+    quantile(arr, q) {
+      if (!arr.length) return NaN;
+      const s = [...arr].sort((a, b) => a - b);
+      const pos = (s.length - 1) * q;
+      const lo = Math.floor(pos);
+      const hi = Math.ceil(pos);
+      return s[lo] + (s[hi] - s[lo]) * (pos - lo);
+    },
+    median(arr) {
+      return M.quantile(arr, 0.5);
+    },
+  });
+
+  /* ---------- seeded random numbers for the illustrative panel ---------- */
+  function mulberry32(a) {
+    return function () {
+      a |= 0;
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  C.generatePanel = function (sample) {
+    const rnd = mulberry32(sample.seed);
+    const gauss = () => {
+      const u = 1 - rnd();
+      const v = rnd();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    };
+    const ratings = {};
+    for (const a of sample.assessors) {
+      const r = (ratings[a.id] = {});
+      const bold = 0.9 + rnd() * 0.2; // some people rate a little more boldly than others
+      for (const c of sample.inquiry.claims) {
+        const p = sample.params[c.id];
+        if (!p) continue;
+        const prior = p.prior.mu + p.prior.k * a.camp + gauss() * p.prior.sd;
+        const ev = {};
+        for (const e of c.evidence) {
+          const q = p.ev[e.id];
+          if (!q) continue;
+          if (rnd() < (q.skip != null ? q.skip : 0.1)) continue; // outside their expertise
+          const s = M.snap((q.s + (q.k || 0) * a.camp + gauss() * q.sd) * bold, STEPS);
+          const t = M.snap(clamp(q.t + (q.kt || 0) * a.camp + gauss() * (q.tsd != null ? q.tsd : 0.12), 0, 1), [0, 0.33, 0.67, 1]);
+          ev[e.id] = { s, t };
+        }
+        r[c.id] = { prior: Math.round(clamp(prior, -24, 24) * 2) / 2, ev };
+      }
+    }
+    return ratings;
+  };
+
+  /* ---------- state & storage ---------- */
+  const KEY = 'credence.prototype.v1';
+  const uid = (p) => p + Math.random().toString(36).slice(2, 9);
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+
+  function readStore() {
+    try {
+      const raw = window.localStorage.getItem(KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  const saved = readStore() || {};
+  const S = (C.state = {
+    inquiry: saved.inquiry || clone(C.SAMPLE.inquiry),
+    sampleRatings: C.generatePanel(C.SAMPLE),
+    me: saved.me || { id: uid('me-'), name: '', discipline: '', ratings: {} },
+    imported: saved.imported || { assessors: [], ratings: {} },
+    settings: Object.assign({ useSample: true, revealed: {} }, saved.settings || {}),
+  });
+
+  C.uid = uid;
+  C.clone = clone;
+
+  C.save = function () {
+    try {
+      window.localStorage.setItem(
+        KEY,
+        JSON.stringify({ inquiry: S.inquiry, me: S.me, imported: S.imported, settings: S.settings })
+      );
+    } catch (e) {
+      /* storage unavailable: the session still works */
+    }
+  };
+
+  C.resetAll = function () {
+    S.inquiry = clone(C.SAMPLE.inquiry);
+    S.me = { id: S.me.id, name: S.me.name, discipline: S.me.discipline, ratings: {} };
+    S.imported = { assessors: [], ratings: {} };
+    S.settings = { useSample: true, revealed: {} };
+    C.save();
+  };
+
+  C.claim = (id) => S.inquiry.claims.find((c) => c.id === id);
+
+  C.myRating = function (cid, create) {
+    let r = S.me.ratings[cid];
+    if (!r && create) r = S.me.ratings[cid] = { prior: null, ev: {} };
+    return r || null;
+  };
+
+  C.sampleActive = () => S.settings.useSample && S.inquiry.sample && S.inquiry.id === C.SAMPLE.inquiry.id;
+
+  /* Everyone whose ratings count. */
+  C.people = function (includeMe) {
+    const list = [];
+    if (C.sampleActive()) {
+      for (const a of C.SAMPLE.assessors) list.push({ ...a, kind: 'sample', ratings: S.sampleRatings[a.id] || {} });
+    }
+    for (const a of S.imported.assessors) {
+      if (a.id === S.me.id) continue;
+      list.push({ ...a, kind: 'imported', ratings: S.imported.ratings[a.id] || {} });
+    }
+    if (includeMe) list.push({ id: S.me.id, name: S.me.name || 'You', discipline: S.me.discipline, isMe: true, kind: 'me', ratings: S.me.ratings });
+    return list;
+  };
+
+  C.posteriorOf = function (claim, r) {
+    if (!r || r.prior == null) return null;
+    let post = r.prior;
+    let n = 0;
+    for (const e of claim.evidence) {
+      const x = r.ev && r.ev[e.id];
+      if (!x || x.s == null) continue;
+      post += x.s * (x.t != null ? x.t : 1);
+      n++;
+    }
+    return { prior: r.prior, post, n };
+  };
+
+  /* ---------- aggregation ---------- */
+  const SPLIT = 12; // middle half wider than 20%–80% counts as split
+  const OPEN = 4.77; // 25% … 75%
+  C.thresholds = { SPLIT, OPEN };
+
+  C.agreementWord = function (iqr) {
+    if (iqr == null || isNaN(iqr)) return '—';
+    if (iqr < 5) return 'Broad agreement';
+    if (iqr <= SPLIT) return 'Mixed views';
+    return 'Split';
+  };
+
+  C.claimStats = function (claim, opts) {
+    opts = opts || {};
+    const includeMe = opts.includeMe !== false;
+    const people = C.people(includeMe);
+    const rows = [];
+    for (const p of people) {
+      const r = p.ratings && p.ratings[claim.id];
+      const res = C.posteriorOf(claim, r);
+      if (!res) continue;
+      rows.push({ id: p.id, name: p.name, discipline: p.discipline, isMe: !!p.isMe, kind: p.kind, ...res });
+    }
+    const priors = rows.map((r) => r.prior);
+    const posts = rows.map((r) => r.post);
+    const q = (a, x) => M.quantile(a, x);
+
+    const ev = claim.evidence.map((e) => {
+      const imp = [];
+      const ss = [];
+      const ts = [];
+      let mine = null;
+      for (const p of people) {
+        const x = p.ratings && p.ratings[claim.id] && p.ratings[claim.id].ev && p.ratings[claim.id].ev[e.id];
+        if (!x || x.s == null) continue;
+        const t = x.t != null ? x.t : 1;
+        if (p.isMe) mine = { s: x.s, t, impact: x.s * t };
+        imp.push(x.s * t);
+        ss.push(x.s);
+        ts.push(t);
+      }
+      if (!includeMe) {
+        const mr = S.me.ratings[claim.id];
+        const x = mr && mr.ev && mr.ev[e.id];
+        if (x && x.s != null) {
+          const t = x.t != null ? x.t : 1;
+          mine = { s: x.s, t, impact: x.s * t };
+        }
+      }
+      const sMed = M.median(ss);
+      const tMed = M.median(ts);
+      const out = {
+        e,
+        n: imp.length,
+        impacts: imp,
+        sMed,
+        tMed,
+        impMed: M.median(imp),
+        impQ1: q(imp, 0.25),
+        impQ3: q(imp, 0.75),
+        impP10: q(imp, 0.1),
+        impP90: q(imp, 0.9),
+        mine,
+      };
+      out.impIqr = out.impQ3 - out.impQ1;
+      out.spread = out.impP90 - out.impP10; // how far apart most of the panel is
+      out.unrealised = imp.length ? Math.abs(sMed) * (1 - tMed) : 0;
+      return out;
+    });
+
+    const rated = ev.filter((x) => x.n >= 3);
+    const crux = [...rated].sort((a, b) => b.spread - a.spread)[0] || null;
+    const repl =
+      [...rated].filter((x) => Math.abs(x.sMed) >= 7 && x.tMed <= 0.5).sort((a, b) => b.unrealised - a.unrealised)[0] || null;
+
+    const st = {
+      claim,
+      rows,
+      n: rows.length,
+      priorMed: M.median(priors),
+      priorQ1: q(priors, 0.25),
+      priorQ3: q(priors, 0.75),
+      postMed: M.median(posts),
+      postQ1: q(posts, 0.25),
+      postQ3: q(posts, 0.75),
+      ev,
+      crux: crux && crux.spread >= 6 ? crux : null,
+      repl,
+    };
+    st.priorIqr = st.priorQ3 - st.priorQ1;
+    st.postIqr = st.postQ3 - st.postQ1;
+    st.shift = st.postMed - st.priorMed;
+    if (st.n < 3) st.status = 'insufficient';
+    else if (st.postIqr > SPLIT) st.status = 'contested';
+    else if (Math.abs(st.postMed) < OPEN) st.status = 'open';
+    else st.status = st.postMed > 0 ? 'settled-true' : 'settled-false';
+    return st;
+  };
+
+  C.STATUS = {
+    contested: { label: 'Contested', short: 'contested', action: 'Fund a decisive test', tone: 'warn' },
+    open: { label: 'Open question', short: 'open', action: 'Fund exploration', tone: 'info' },
+    'settled-true': { label: 'Consensus: likely true', short: 'agreed likely true', action: 'Low priority', tone: 'calm' },
+    'settled-false': { label: 'Consensus: likely false', short: 'agreed likely false', action: 'Low priority', tone: 'calm' },
+    insufficient: { label: 'Too few assessors', short: 'need more assessors', action: 'Recruit assessors', tone: 'mute' },
+  };
+
+  /* Ranked list of where money would most change expert minds. */
+  C.opportunities = function (all) {
+    const out = [];
+    for (const s of all) {
+      if (s.status === 'contested') {
+        out.push({ type: 'settle', score: 10 + s.postIqr, stats: s, ev: s.crux });
+      }
+      if (s.repl) {
+        out.push({ type: 'replicate', score: 6 + s.repl.unrealised, stats: s, ev: s.repl });
+      }
+      if (s.status === 'open') {
+        out.push({ type: 'explore', score: 8 + (OPEN - Math.abs(s.postMed)), stats: s, ev: null });
+      }
+    }
+    return out.sort((a, b) => b.score - a.score);
+  };
+
+  /* ---------- import / export ---------- */
+  C.exportMine = function () {
+    return {
+      format: 'credence.ratings.v1',
+      exportedAt: new Date().toISOString(),
+      inquiryId: S.inquiry.id,
+      assessor: { id: S.me.id, name: S.me.name || 'Anonymous', discipline: S.me.discipline || '' },
+      ratings: S.me.ratings,
+    };
+  };
+
+  C.exportInquiry = function () {
+    const assessors = [...S.imported.assessors];
+    const ratings = { ...S.imported.ratings };
+    if (Object.keys(S.me.ratings).length) {
+      assessors.push({ id: S.me.id, name: S.me.name || 'Anonymous', discipline: S.me.discipline || '' });
+      ratings[S.me.id] = S.me.ratings;
+    }
+    return { format: 'credence.inquiry.v1', exportedAt: new Date().toISOString(), inquiry: S.inquiry, assessors, ratings };
+  };
+
+  /* Returns a short human message describing what was imported. */
+  C.importData = function (obj) {
+    if (!obj || typeof obj !== 'object') throw new Error('That file is not Credence data.');
+    if (obj.format === 'credence.ratings.v1') {
+      const a = obj.assessor || {};
+      if (!a.id) throw new Error('The ratings file has no assessor id.');
+      if (a.id === S.me.id) throw new Error('That file holds your own ratings; they are already here.');
+      const i = S.imported.assessors.findIndex((x) => x.id === a.id);
+      const entry = { id: a.id, name: a.name || 'Assessor', discipline: a.discipline || '' };
+      if (i >= 0) S.imported.assessors[i] = entry;
+      else S.imported.assessors.push(entry);
+      S.imported.ratings[a.id] = obj.ratings || {};
+      C.save();
+      return 'Added ratings from ' + entry.name + '.';
+    }
+    if (obj.format === 'credence.inquiry.v1') {
+      if (!obj.inquiry || !Array.isArray(obj.inquiry.claims)) throw new Error('The inquiry file has no claims.');
+      S.inquiry = obj.inquiry;
+      S.imported = { assessors: (obj.assessors || []).filter((a) => a.id !== S.me.id), ratings: obj.ratings || {} };
+      if (obj.ratings && obj.ratings[S.me.id]) S.me.ratings = obj.ratings[S.me.id];
+      C.save();
+      return 'Loaded “' + (S.inquiry.title || 'inquiry') + '” with ' + S.imported.assessors.length + ' assessors.';
+    }
+    throw new Error('Unrecognised file. Expected a Credence ratings or inquiry export.');
+  };
+})();
+
+</script>
+    <script>
+/*
+ * Credence — hand-built SVG charts. No libraries.
+ * Every chart draws credence on the same log-odds axis, labelled in percent.
+ */
+(function () {
+  const C = (window.C = window.C || {});
+  const M = C.math;
+
+  const esc = (C.esc = function (s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  });
+
+  const TICKS_WIDE = [0.01, 0.05, 0.25, 0.5, 0.75, 0.95, 0.99];
+  const TICKS_NARROW = [0.01, 0.1, 0.5, 0.9, 0.99]; // evenly spaced in decibans
+  let TICKS = TICKS_WIDE;
+  const useTicks = (w) => (TICKS = w < 460 ? TICKS_NARROW : TICKS_WIDE);
+  const tickLabel = (p) => Math.round(p * 100) + '%';
+  const r1 = (v) => Math.round(v * 10) / 10;
+
+  function scaleX(left, width, D) {
+    D = D || M.D;
+    return (db) => left + ((M.clamp(db, -D, D) + D) / (2 * D)) * width;
+  }
+
+  function truncate(text, maxChars) {
+    if (text.length <= maxChars) return text;
+    return text.slice(0, Math.max(0, maxChars - 1)).trimEnd() + '…';
+  }
+
+  function grid(x, top, bottom, opts) {
+    opts = opts || {};
+    let out = '';
+    for (const p of TICKS) {
+      const db = M.toDb(p);
+      const xx = r1(x(db));
+      out += `<line x1="${xx}" x2="${xx}" y1="${top}" y2="${bottom}" class="${p === 0.5 ? 'g-mid' : 'g-line'}"/>`;
+      if (opts.labels !== false) {
+        out += `<text x="${xx}" y="${opts.labelY}" class="g-tick" text-anchor="middle">${tickLabel(p)}</text>`;
+      }
+    }
+    return out;
+  }
+
+  function arrow(x1, x2, y, cls) {
+    const dir = x2 > x1 ? 1 : -1;
+    const head = Math.min(7, Math.abs(x2 - x1));
+    const xb = x2 - dir * head;
+    return (
+      `<line x1="${r1(x1)}" x2="${r1(xb)}" y1="${y}" y2="${y}" class="${cls}-line"/>` +
+      `<path d="M${r1(x2)},${y} L${r1(xb)},${y - 4.5} L${r1(xb)},${y + 4.5} Z" class="${cls}-head"/>`
+    );
+  }
+
+  const C_ = (C.charts = {});
+
+  /* ------------------------------------------------------------------
+   * Belief path: the assessor's own reasoning, read top to bottom.
+   * ------------------------------------------------------------------ */
+  C_.beliefPath = function (el, claim, mine, panel) {
+    const W = Math.max(260, el.clientWidth || 340);
+    const padL = 12;
+    const padR = 12;
+    const w = W - padL - padR;
+    const x = scaleX(padL, w);
+    const RH = 42;
+    const top = 30;
+    const items = claim.evidence;
+    const rowsN = items.length + 2;
+    const H = top + rowsN * RH + (panel ? 26 : 8);
+    const chars = Math.floor(w / 6.4);
+    useTicks(w);
+
+    if (!mine || mine.prior == null) {
+      el.innerHTML = `<div class="path-empty">Set your starting belief to see how the evidence moves you.</div>`;
+      return;
+    }
+
+    let svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Your belief path for this claim">`;
+    svg += `<text x="${padL}" y="12" class="g-cap">← less likely</text><text x="${W - padR}" y="12" class="g-cap" text-anchor="end">more likely →</text>`;
+    svg += grid(x, top - 4, H - (panel ? 26 : 8), { labelY: 25 });
+
+    let cum = mine.prior;
+    let pc = panel ? panel.priorMed : null;
+    const panelPts = [];
+    let y = top;
+
+    // start row
+    let my = y + 28;
+    svg += `<text x="${padL}" y="${y + 13}" class="p-label strong">Starting belief · ${M.pctDb(cum)}</text>`;
+    let prevY = my;
+    let prevX = x(cum);
+    if (panel && pc != null) panelPts.push([x(pc), my]);
+    svg += `<circle cx="${r1(prevX)}" cy="${my}" r="5" class="p-dot"/>`;
+    y += RH;
+
+    items.forEach((e) => {
+      const r = mine.ev && mine.ev[e.id];
+      my = y + 28;
+      const evStat = panel && panel.ev.find((v) => v.e.id === e.id);
+      if (panel && evStat && evStat.n) {
+        pc += evStat.impMed;
+        panelPts.push([x(pc), my]);
+      }
+      if (!r || r.s == null) {
+        svg += `<text x="${padL}" y="${y + 13}" class="p-label mute">${esc(truncate(e.title, chars - 10))} · not rated</text>`;
+        svg += `<line x1="${r1(prevX)}" x2="${r1(prevX)}" y1="${prevY + 6}" y2="${my + 6}" class="p-conn"/>`;
+        prevY = my;
+        y += RH;
+        return;
+      }
+      const t = r.t != null ? r.t : 1;
+      const impact = r.s * t;
+      const x1 = x(cum);
+      const x2 = x(cum + impact);
+      const word = M.strengthLabel(impact);
+      svg += `<line x1="${r1(x1)}" x2="${r1(x1)}" y1="${prevY + 6}" y2="${my}" class="p-conn"/>`;
+      svg += `<g class="p-row" data-ev="${esc(e.id)}" data-tip="${esc('<b>' + e.title + '</b><br>' + word + ' · ' + M.pctDb(cum) + ' → ' + M.pctDb(cum + impact))}">`;
+      svg += `<rect x="0" y="${y + 1}" width="${W}" height="${RH - 2}" class="p-hit"/>`;
+      svg += `<text x="${padL}" y="${y + 13}" class="p-label">${esc(truncate(e.title, chars))}</text>`;
+      if (Math.abs(x2 - x1) < 3) {
+        svg += `<circle cx="${r1(x1)}" cy="${my}" r="3.5" class="p-none"/>`;
+      } else {
+        svg += arrow(x1, x2, my, impact > 0 ? 'a-for' : 'a-against');
+      }
+      svg += `</g>`;
+      cum += impact;
+      prevX = x(cum);
+      prevY = my;
+      y += RH;
+    });
+
+    // end row
+    my = y + 28;
+    if (panel && pc != null) panelPts.push([x(pc), my]);
+    svg += `<line x1="${r1(prevX)}" x2="${r1(prevX)}" y1="${prevY + 6}" y2="${my}" class="p-conn"/>`;
+    if (panelPts.length > 1) {
+      svg += `<polyline points="${panelPts.map((p) => r1(p[0]) + ',' + p[1]).join(' ')}" class="p-panel"/>`;
+      const last = panelPts[panelPts.length - 1];
+      svg += `<circle cx="${r1(last[0])}" cy="${last[1]}" r="5" class="p-panel-end"/>`;
+      const anchor = last[0] > W - 90 ? 'end' : last[0] < 90 ? 'start' : 'middle';
+      svg += `<text x="${r1(last[0])}" y="${my + 22}" class="p-label mute" text-anchor="${anchor}">Panel median · ${M.pctDb(pc)}</text>`;
+    }
+    const endX = x(cum);
+    svg += `<text x="${padL}" y="${y + 13}" class="p-label strong">Your conclusion · ${M.pctDb(cum)} · ${esc(M.verbalDb(cum))}</text>`;
+    svg += `<circle cx="${r1(endX)}" cy="${my}" r="7.5" class="p-end"/>`;
+    svg += `</svg>`;
+    el.innerHTML = svg;
+  };
+
+  /* ------------------------------------------------------------------
+   * Panel strip: one dot per assessor's conclusion, middle half shaded.
+   * ------------------------------------------------------------------ */
+  C_.strip = function (el, st, opts) {
+    opts = opts || {};
+    const W = Math.max(240, el.clientWidth || 420);
+    const padL = 12;
+    const padR = 12;
+    const H = opts.compact ? 54 : 62;
+    if (!st.n) {
+      el.innerHTML = `<div class="path-empty" style="padding:14px">No ratings yet</div>`;
+      return;
+    }
+    const x = scaleX(padL, W - padL - padR);
+    useTicks(W - padL - padR);
+    const base = opts.compact ? 26 : 30;
+    let svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(
+      'Conclusions of ' + st.n + ' assessors. Median ' + M.pctDb(st.postMed)
+    )}">`;
+    svg += grid(x, 4, H - 14, { labelY: H - 2 });
+    if (st.n >= 2) {
+      const a = x(st.postQ1);
+      const b = x(st.postQ3);
+      svg += `<rect x="${r1(a)}" y="${base - 15}" width="${r1(Math.max(2, b - a))}" height="30" rx="5" class="s-band"/>`;
+    }
+    // shift arrow from starting-belief median to conclusion median
+    if (st.n >= 3 && Math.abs(st.shift) > 0.8) {
+      svg += `<circle cx="${r1(x(st.priorMed))}" cy="5" r="3" class="s-prior"/>`;
+      svg += arrow(x(st.priorMed), x(st.postMed), 5, st.shift > 0 ? 'a-for' : 'a-against');
+    }
+    // beeswarm
+    const placed = [];
+    const rows = [...st.rows].sort((a, b) => (a.isMe ? 1 : 0) - (b.isMe ? 1 : 0) || a.post - b.post);
+    const offsets = [0, -8, 8, -15, 15, -4, 4, -11, 11];
+    for (const r of rows) {
+      const cx = x(r.post);
+      let cy = base;
+      for (const o of offsets) {
+        const yy = base + o;
+        if (!placed.some((p) => Math.abs(p[0] - cx) < 8.5 && Math.abs(p[1] - yy) < 8.5)) {
+          cy = yy;
+          break;
+        }
+      }
+      placed.push([cx, cy]);
+      const tip = `<b>${esc(r.name)}</b>${r.discipline ? ' · ' + esc(r.discipline) : ''}<br>Start ${M.pctDb(r.prior)} → conclusion ${M.pctDb(
+        r.post
+      )}<br>${r.n} of ${st.claim.evidence.length} pieces of evidence rated`;
+      svg += `<circle cx="${r1(cx)}" cy="${cy}" r="${r.isMe ? 5.5 : 4.2}" class="${r.isMe ? 's-me' : 's-dot'}" data-tip="${esc(tip)}" tabindex="-1"/>`;
+      if (r.isMe) svg += `<text x="${r1(cx)}" y="${cy - 9}" class="s-me-label" text-anchor="middle">You</text>`;
+    }
+    if (st.n >= 1) {
+      const mx = r1(x(st.postMed));
+      svg += `<line x1="${mx}" x2="${mx}" y1="${base - 17}" y2="${base + 17}" class="s-median"/>`;
+    }
+    svg += `</svg>`;
+    el.innerHTML = svg;
+  };
+
+  /* ------------------------------------------------------------------
+   * Funding map: credence × disagreement, one bubble per claim.
+   * ------------------------------------------------------------------ */
+  C_.map = function (el, list, onPick) {
+    const W = Math.max(300, el.clientWidth || 560);
+    const H = Math.round(Math.min(380, Math.max(280, W * 0.62)));
+    const padL = 44;
+    const padR = 16;
+    const padT = 14;
+    const padB = 44;
+    const w = W - padL - padR;
+    const h = H - padT - padB;
+    const x = scaleX(padL, w);
+    useTicks(w);
+    const YMAX = 30;
+    const y = (iqr) => padT + h - (M.clamp(iqr, 0, YMAX) / YMAX) * h;
+    const { SPLIT, OPEN } = C.thresholds;
+    const ySplit = y(SPLIT);
+    let svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Map of claims by panel credence and disagreement">`;
+    // zones
+    svg += `<rect x="${padL}" y="${padT}" width="${w}" height="${r1(ySplit - padT)}" class="z-contested"/>`;
+    svg += `<rect x="${padL}" y="${r1(ySplit)}" width="${r1(x(-OPEN) - padL)}" height="${r1(padT + h - ySplit)}" class="z-false"/>`;
+    svg += `<rect x="${r1(x(-OPEN))}" y="${r1(ySplit)}" width="${r1(x(OPEN) - x(-OPEN))}" height="${r1(padT + h - ySplit)}" class="z-open"/>`;
+    svg += `<rect x="${r1(x(OPEN))}" y="${r1(ySplit)}" width="${r1(padL + w - x(OPEN))}" height="${r1(padT + h - ySplit)}" class="z-true"/>`;
+    svg += grid(x, padT, padT + h, { labelY: padT + h + 16 });
+    svg += `<text x="${padL + 8}" y="${padT + 18}" class="z-label">Contested · experts split</text>`;
+    svg += `<text x="${padL + 8}" y="${padT + h - 10}" class="z-label">Agreed: likely false</text>`;
+    svg += `<text x="${r1((x(-OPEN) + x(OPEN)) / 2)}" y="${padT + h - 10}" class="z-label" text-anchor="middle">Open</text>`;
+    svg += `<text x="${padL + w - 8}" y="${padT + h - 10}" class="z-label" text-anchor="end">Agreed: likely true</text>`;
+    // y axis, in words rather than decibans
+    svg += `<text x="12" y="${r1(padT + h / 2)}" class="g-cap" transform="rotate(-90 12 ${r1(padT + h / 2)})" text-anchor="middle">Disagreement →</text>`;
+    svg += `<text x="${padL - 6}" y="${r1(padT + h - 2)}" class="g-tick" text-anchor="end">low</text>`;
+    svg += `<text x="${padL - 6}" y="${r1(padT + 10)}" class="g-tick" text-anchor="end">high</text>`;
+    svg += `<line x1="${padL}" x2="${padL + w}" y1="${r1(ySplit)}" y2="${r1(ySplit)}" class="g-mid"/>`;
+    svg += `<text x="${r1(padL + w / 2)}" y="${H - 6}" class="g-cap" text-anchor="middle">Panel’s median credence →</text>`;
+    // bubbles: numbered to match the claim list; titles live in the key below and the tooltip
+    const placed = [];
+    list.forEach((st, i) => {
+      if (st.n < 3) return; // too few assessors to place on the map
+      const cx = x(st.postMed);
+      let cy = y(st.postIqr);
+      while (placed.some((p) => Math.hypot(p[0] - cx, p[1] - cy) < 22)) cy -= 6;
+      placed.push([cx, cy]);
+      const tip = `<b>${esc(st.claim.title)}</b><br>Median ${M.pctDb(st.postMed)} · middle half ${M.pctDb(st.postQ1)}–${M.pctDb(st.postQ3)}<br>${
+        C.STATUS[st.status].label
+      }`;
+      svg += `<g class="m-pt" data-claim="${esc(st.claim.id)}" data-tip="${esc(tip)}" tabindex="0" role="button" aria-label="${esc(st.claim.title)}">`;
+      svg += `<circle cx="${r1(cx)}" cy="${r1(cy)}" r="12" class="m-dot m-${st.status}"/>`;
+      svg += `<text x="${r1(cx)}" y="${r1(cy + 4)}" class="m-num" text-anchor="middle">${i + 1}</text>`;
+      svg += `</g>`;
+    });
+    svg += `</svg>`;
+    el.innerHTML = svg;
+    if (onPick) {
+      el.querySelectorAll('.m-pt').forEach((g) => {
+        g.addEventListener('click', () => onPick(g.dataset.claim));
+        g.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter' || ev.key === ' ') {
+            ev.preventDefault();
+            onPick(g.dataset.claim);
+          }
+        });
+      });
+    }
+  };
+
+  /* ------------------------------------------------------------------
+   * Slopegraph: each assessor's start → conclusion.
+   * ------------------------------------------------------------------ */
+  C_.slope = function (el, st) {
+    const W = Math.max(280, el.clientWidth || 520);
+    const padL = 12;
+    const padR = 12;
+    const H = 232;
+    const yA = 44;
+    const yB = 178;
+    const x = scaleX(padL, W - padL - padR);
+    useTicks(W - padL - padR);
+    let svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="How each assessor moved from starting belief to conclusion">`;
+    svg += `<text x="${padL}" y="14" class="g-cap strong">Before weighing evidence</text>`;
+    svg += `<text x="${padL}" y="${H - 4}" class="g-cap strong">After weighing evidence</text>`;
+    for (const p of TICKS) {
+      const xx = r1(x(M.toDb(p)));
+      svg += `<line x1="${xx}" x2="${xx}" y1="${yA}" y2="${yB}" class="${p === 0.5 ? 'g-mid' : 'g-line'}"/>`;
+      svg += `<text x="${xx}" y="${yA - 14}" class="g-tick" text-anchor="middle">${tickLabel(p)}</text>`;
+      svg += `<text x="${xx}" y="${yB + 22}" class="g-tick" text-anchor="middle">${tickLabel(p)}</text>`;
+    }
+    if (st.n >= 2) {
+      svg += `<rect x="${r1(x(st.priorQ1))}" y="${yA - 7}" width="${r1(Math.max(2, x(st.priorQ3) - x(st.priorQ1)))}" height="14" rx="7" class="s-band"/>`;
+      svg += `<rect x="${r1(x(st.postQ1))}" y="${yB - 7}" width="${r1(Math.max(2, x(st.postQ3) - x(st.postQ1)))}" height="14" rx="7" class="s-band"/>`;
+    }
+    const rows = [...st.rows].sort((a, b) => (a.isMe ? 1 : 0) - (b.isMe ? 1 : 0));
+    for (const r of rows) {
+      const tip = `<b>${esc(r.name)}</b>${r.discipline ? ' · ' + esc(r.discipline) : ''}<br>${M.pctDb(r.prior)} → ${M.pctDb(r.post)}`;
+      svg += `<g data-tip="${esc(tip)}" class="${r.isMe ? 'sl-me' : 'sl-row'}">`;
+      svg += `<line x1="${r1(x(r.prior))}" y1="${yA}" x2="${r1(x(r.post))}" y2="${yB}"/>`;
+      svg += `<circle cx="${r1(x(r.prior))}" cy="${yA}" r="${r.isMe ? 5 : 3.5}"/><circle cx="${r1(x(r.post))}" cy="${yB}" r="${r.isMe ? 5 : 3.5}"/>`;
+      svg += `</g>`;
+    }
+    if (st.n >= 1) {
+      svg += `<g class="sl-med"><line x1="${r1(x(st.priorMed))}" y1="${yA}" x2="${r1(x(st.postMed))}" y2="${yB}"/>`;
+      svg += `<circle cx="${r1(x(st.priorMed))}" cy="${yA}" r="6"/><circle cx="${r1(x(st.postMed))}" cy="${yB}" r="6"/></g>`;
+    }
+    svg += `</svg>`;
+    el.innerHTML = svg;
+  };
+
+  /* ------------------------------------------------------------------
+   * Evidence impact: one row per piece of evidence.
+   * Outline = weight if fully trusted; fill = weight as the panel trusts it.
+   * ------------------------------------------------------------------ */
+  const IMP_D = 25;
+  C_.impactScale = function (W) {
+    const padL = 8;
+    const padR = 8;
+    return scaleX(padL, W - padL - padR, IMP_D);
+  };
+
+  C_.impactHeader = function (el) {
+    const W = Math.max(200, el.clientWidth || 320);
+    const x = C_.impactScale(W);
+    const H = 34;
+    let svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">`;
+    svg += `<text x="8" y="12" class="g-cap">← opposes</text><text x="${W - 8}" y="12" class="g-cap" text-anchor="end">supports →</text>`;
+    const marks = [
+      [-20, 'Decisive'],
+      [-10, 'Strong'],
+      [0, 'None'],
+      [10, 'Strong'],
+      [20, 'Decisive'],
+    ];
+    for (const [v, l] of marks) svg += `<text x="${r1(x(v))}" y="29" class="g-tick" text-anchor="middle">${l}</text>`;
+    svg += `</svg>`;
+    el.innerHTML = svg;
+  };
+
+  C_.impactRow = function (el, v, opts) {
+    opts = opts || {};
+    const W = Math.max(200, el.clientWidth || 320);
+    const x = C_.impactScale(W);
+    const H = 34;
+    const yc = 13;
+    const x0 = x(0);
+    let svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(
+      v.n ? 'Panel weighs it as ' + M.strengthLabel(v.impMed) : 'Not rated by the panel'
+    )}">`;
+    for (const g of [-20, -10, -5, 5, 10, 20]) svg += `<line x1="${r1(x(g))}" x2="${r1(x(g))}" y1="0" y2="${H}" class="g-line"/>`;
+    svg += `<line x1="${r1(x0)}" x2="${r1(x0)}" y1="0" y2="${H}" class="g-mid"/>`;
+    if (v.n) {
+      const cls = v.sMed >= 0 ? 'for' : 'against';
+      const pa = Math.min(x0, x(v.sMed));
+      const pw = Math.abs(x(v.sMed) - x0);
+      svg += `<rect x="${r1(pa)}" y="${yc - 7}" width="${r1(Math.max(1, pw))}" height="14" rx="3" class="i-pot i-${cls}"/>`;
+      const ia = Math.min(x0, x(v.impMed));
+      const iw = Math.abs(x(v.impMed) - x0);
+      const icls = v.impMed >= 0 ? 'for' : 'against';
+      if (iw >= 1) svg += `<rect x="${r1(ia)}" y="${yc - 7}" width="${r1(iw)}" height="14" rx="3" class="i-fill i-${icls}"/>`;
+      if (v.n >= 3) {
+        const a = x(v.impQ1);
+        const b = x(v.impQ3);
+        svg += `<line x1="${r1(a)}" x2="${r1(b)}" y1="${yc + 13}" y2="${yc + 13}" class="i-iqr"/>`;
+        svg += `<line x1="${r1(a)}" x2="${r1(a)}" y1="${yc + 9}" y2="${yc + 17}" class="i-iqr"/><line x1="${r1(b)}" x2="${r1(b)}" y1="${yc + 9}" y2="${yc + 17}" class="i-iqr"/>`;
+      }
+    }
+    if (v.mine && opts.showMine !== false) {
+      const mx = r1(x(v.mine.impact));
+      svg += `<path d="M${mx},${yc - 8} l-5,-6 h10 z" class="i-me"/>`;
+    }
+    svg += `</svg>`;
+    el.innerHTML = svg;
+  };
+
+  /* ------------------------------------------------------------------
+   * Mini comparison inside an evidence card (after you have rated it).
+   * ------------------------------------------------------------------ */
+  C_.miniCompare = function (el, v) {
+    const W = Math.max(200, el.clientWidth || 300);
+    const x = C_.impactScale(W);
+    const H = 40;
+    const yc = 16;
+    let svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Your weighting compared with the panel">`;
+    svg += `<line x1="${r1(x(0))}" x2="${r1(x(0))}" y1="2" y2="${H - 12}" class="g-mid"/>`;
+    for (const g of [-20, -10, 10, 20]) svg += `<line x1="${r1(x(g))}" x2="${r1(x(g))}" y1="2" y2="${H - 12}" class="g-line"/>`;
+    if (v.n >= 2) {
+      svg += `<rect x="${r1(x(v.impQ1))}" y="${yc - 9}" width="${r1(Math.max(2, x(v.impQ3) - x(v.impQ1)))}" height="18" rx="5" class="s-band"/>`;
+    }
+    const placed = [];
+    for (const imp of [...v.impacts].sort((a, b) => a - b)) {
+      const cx = x(imp);
+      let cy = yc;
+      for (const o of [0, -6, 6, -11, 11]) {
+        if (!placed.some((p) => Math.abs(p[0] - cx) < 6.5 && Math.abs(p[1] - (yc + o)) < 6.5)) {
+          cy = yc + o;
+          break;
+        }
+      }
+      placed.push([cx, cy]);
+      svg += `<circle cx="${r1(cx)}" cy="${cy}" r="3.2" class="s-dot"/>`;
+    }
+    if (v.n) svg += `<line x1="${r1(x(v.impMed))}" x2="${r1(x(v.impMed))}" y1="${yc - 11}" y2="${yc + 11}" class="s-median"/>`;
+    if (v.mine) {
+      const mx = r1(x(v.mine.impact));
+      svg += `<circle cx="${mx}" cy="${yc}" r="5.5" class="s-me"/>`;
+    }
+    svg += `<text x="8" y="${H - 1}" class="g-tick">opposes</text><text x="${W - 8}" y="${H - 1}" class="g-tick" text-anchor="end">supports</text>`;
+    svg += `</svg>`;
+    el.innerHTML = svg;
+  };
+})();
+
+</script>
+    <script>
+/*
+ * Credence — Assess view (for assessors / experts).
+ * One claim at a time: starting belief → weigh each piece of evidence → compare with the panel.
+ */
+(function () {
+  const C = (window.C = window.C || {});
+  const M = C.math;
+  const esc = C.esc;
+  const S = C.state;
+  const views = (C.views = C.views || {});
+
+  const STATUS_BADGE = {
+    Retracted: ['retracted', '✕'],
+    Contested: ['contested', '!'],
+    Replicated: ['replicated', '✓'],
+    'Single study': ['single', '1'],
+    Replication: ['replication', '↻'],
+  };
+  C.statusBadge = function (status) {
+    if (!status) return '';
+    const b = STATUS_BADGE[status] || ['other', '·'];
+    return `<span class="badge badge-${b[0]}"><i aria-hidden="true">${b[1]}</i>${esc(status)}</span>`;
+  };
+
+  function progress(claim) {
+    const r = S.me.ratings[claim.id];
+    let done = r && r.prior != null ? 1 : 0;
+    for (const e of claim.evidence) if (r && r.ev && r.ev[e.id] && r.ev[e.id].s != null) done++;
+    return { done, total: claim.evidence.length + 1, rated: done - (r && r.prior != null ? 1 : 0) };
+  }
+
+  const isRevealed = (cid) => !!S.settings.revealed[cid];
+
+  function maybeAutoReveal(claim) {
+    const p = progress(claim);
+    if (p.done === p.total && !isRevealed(claim.id)) {
+      S.settings.revealed[claim.id] = true;
+      C.save();
+      return true;
+    }
+    return false;
+  }
+
+  /* ---------- markup ---------- */
+  function railHTML(current) {
+    const items = S.inquiry.claims
+      .map((c, i) => {
+        const p = progress(c);
+        const res = C.posteriorOf(c, S.me.ratings[c.id]);
+        return `<li><button class="claim-btn" data-claim="${esc(c.id)}" aria-current="${c.id === current ? 'true' : 'false'}">
+          <span class="cb-num">${i + 1}</span>
+          <span class="cb-body"><span class="cb-title">${esc(c.title)}</span>
+            <span class="cb-meta"><span class="cb-prog" aria-hidden="true"><i style="width:${Math.round((p.done / p.total) * 100)}%"></i></span>${p.rated} of ${c.evidence.length} weighed</span></span>
+          <span class="cb-val">${res ? M.pctDb(res.post) : ''}</span>
+        </button></li>`;
+      })
+      .join('');
+    return `<div class="rail-head"><h2 class="rail-title">Claims</h2><button class="btn-link" data-act="add-claim">+ Add claim</button></div>
+      <ol class="claim-list">${items}</ol>
+      <div class="you-card">
+        <label for="me-name">Assessing as</label>
+        <input class="field" id="me-name" placeholder="Your name" value="${esc(S.me.name)}" autocomplete="name">
+        <input class="field" id="me-disc" placeholder="Your field, e.g. Neuropathology" value="${esc(S.me.discipline)}">
+        <button class="btn-ghost sm" data-act="export-mine">Export my ratings</button>
+      </div>`;
+  }
+
+  function credenceHTML(prior) {
+    const unset = prior == null;
+    const v = unset ? 0 : prior;
+    const p = M.toP(v);
+    const ticks = [0.01, 0.05, 0.25, 0.5, 0.75, 0.95, 0.99]
+      .map((t) => `<span style="--t:${(M.toDb(t) + M.D) / (2 * M.D)}">${Math.round(t * 100)}%</span>`)
+      .join('');
+    const presets = [0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99]
+      .map((t) => {
+        const on = !unset && Math.abs(M.toDb(t) - v) < 0.3;
+        return `<button type="button" class="preset${on ? ' is-on' : ''}" data-p="${t}">${Math.round(t * 100)}%</button>`;
+      })
+      .join('');
+    return `<div class="cred${unset ? ' is-unset' : ''}" id="cred">
+      <div class="cred-read" aria-live="polite">
+        <span class="cred-big num" id="cred-big">${unset ? '—' : M.pct(p)}</span>
+        <span class="cred-words"><span class="cred-verbal" id="cred-verbal">${unset ? 'Not set yet' : esc(M.verbal(p))}</span>
+        <span class="cred-freq" id="cred-freq">${unset ? 'Drag the slider or pick a value' : esc(M.chance(p))}</span></span>
+      </div>
+      <div class="cred-track">
+        <input type="range" id="prior-range" min="${-M.D}" max="${M.D}" step="0.5" value="${v}" aria-label="Starting belief" aria-valuetext="${unset ? 'Not set' : M.pct(p) + ', ' + M.verbal(p)}">
+        <div class="cred-ticks" aria-hidden="true">${ticks}</div>
+      </div>
+      <div class="presets"><span class="presets-label">Quick pick</span>${presets}</div>
+    </div>`;
+  }
+
+  function readoutHTML(r) {
+    if (!r || r.s == null) return 'Not weighed yet.';
+    if (r.s === 0) return '<b>No effect.</b> This finding does not move the claim either way.';
+    const t = r.t != null ? r.t : 1;
+    const eff = r.s * t;
+    let txt = `<b>${esc(M.strengthLabel(r.s))}.</b> If it holds, it ${esc(M.factorText(r.s))}.`;
+    if (t < 1) txt += ` Trusted “${esc(M.trustLabel(t))}”, it counts as ${esc(M.strengthLabel(eff).toLowerCase())}.`;
+    return txt;
+  }
+
+  function scaleHTML(e, r) {
+    const sel = r && r.s != null ? r.s : null;
+    const segs = M.STEPS.map((s, i) => {
+      const dist = Math.abs(i - 6);
+      const dir = s > 0 ? 'for' : s < 0 ? 'against' : 'mid';
+      const on = sel === s;
+      const fill = sel != null && sel !== 0 && Math.sign(s) === Math.sign(sel) && Math.abs(s) <= Math.abs(sel);
+      const label = M.strengthLabel(s);
+      return `<button type="button" role="radio" aria-checked="${on}" class="seg ${dir} lvl-${dist}${fill ? ' is-fill' : ''}${on ? ' is-on' : ''}" data-s="${s}" data-ev="${esc(
+        e.id
+      )}" aria-label="${esc(label)}" title="${esc(label)}"></button>`;
+    }).join('');
+    return `<div class="scale" role="radiogroup" aria-labelledby="ql-${esc(e.id)}">${segs}</div>
+      <div class="scale-labels" aria-hidden="true"><span>Decisive</span><span>Strong</span><span>Weak</span><span class="sl-mid">None</span><span>Weak</span><span>Strong</span><span>Decisive</span></div>
+      <div class="scale-dirs" aria-hidden="true"><span>← Opposes the claim</span><span>Supports the claim →</span></div>`;
+  }
+
+  function trustHTML(e, r) {
+    const has = r && r.s != null;
+    const t = has ? (r.t != null ? r.t : 1) : null;
+    const chips = M.TRUST.map((x) => {
+      const on = t != null && Math.abs(x.v - t) < 0.01;
+      return `<button type="button" role="radio" aria-checked="${on}" class="chip${on ? ' is-on' : ''}" data-t="${x.v}" data-ev="${esc(e.id)}"${
+        has ? '' : ' disabled'
+      }>${esc(x.label)}<small>${esc(x.hint)}</small></button>`;
+    }).join('');
+    return `<div class="chips${has ? '' : ' is-disabled'}" role="radiogroup" aria-labelledby="qt-${esc(e.id)}">${chips}</div>`;
+  }
+
+  function compareMiniHTML(claim, e, r, st) {
+    if (!isRevealed(claim.id) || !r || r.s == null || !st) return '';
+    const v = st.ev.find((x) => x.e.id === e.id);
+    if (!v || !v.n) return `<div class="ev-compare"><p>No one else on the panel has weighed this yet.</p></div>`;
+    const mine = r.s * (r.t != null ? r.t : 1);
+    const diff = mine - v.impMed;
+    let rel = 'You weigh it about the same as the panel.';
+    if (Math.abs(diff) >= 3) rel = diff > 0 ? 'You read it as more supportive than most of the panel.' : 'You read it as more damaging to the claim than most of the panel.';
+    return `<div class="ev-compare"><div class="mini" data-mini="${esc(e.id)}"></div>
+      <p><b>Panel median:</b> ${esc(M.strengthLabel(v.impMed))} (${v.n} assessors). ${rel}</p></div>`;
+  }
+
+  function cardHTML(claim, e, k, st) {
+    const r = S.me.ratings[claim.id] && S.me.ratings[claim.id].ev[e.id];
+    const rated = r && r.s != null;
+    const src = e.source || {};
+    const srcText = [src.label, src.year].filter(Boolean).join(', ');
+    return `<article class="ev${rated ? ' is-rated' : ''}" id="ev-${esc(e.id)}" data-card="${esc(e.id)}">
+      <div class="ev-top">
+        <span class="ev-num" aria-hidden="true">${rated ? '✓' : k + 1}</span>
+        <div class="ev-head">
+          <div class="ev-tags">${e.kind ? `<span class="tag">${esc(e.kind)}</span>` : ''}${C.statusBadge(e.status)}</div>
+          <h4 class="ev-title">${esc(e.title)}</h4>
+          ${e.summary ? `<p class="ev-sum">${esc(e.summary)}</p>` : ''}
+          ${src.url ? `<p class="ev-src"><a href="${esc(src.url)}" target="_blank" rel="noopener">${esc(srcText || 'Source')} ↗</a></p>` : srcText ? `<p class="ev-src">${esc(srcText)}</p>` : ''}
+        </div>
+      </div>
+      <div class="ev-q">
+        <div class="q-label" id="ql-${esc(e.id)}">If this finding holds, what does it do to the claim?</div>
+        ${scaleHTML(e, r)}
+        <p class="readout" id="ro-${esc(e.id)}">${readoutHTML(r)}</p>
+      </div>
+      <div class="ev-q">
+        <div class="q-label" id="qt-${esc(e.id)}">How far do you trust the finding itself?</div>
+        ${trustHTML(e, r)}
+      </div>
+      <details class="ev-note"${r && r.note ? ' open' : ''}><summary>Note for the panel</summary>
+        <textarea class="field" data-note="${esc(e.id)}" rows="2" placeholder="Why? What would change your mind?">${esc((r && r.note) || '')}</textarea></details>
+      ${compareMiniHTML(claim, e, r, st)}
+      <div class="ev-tools"><button class="btn-link" data-act="edit-ev" data-ev="${esc(e.id)}">Edit</button><button class="btn-link" data-act="del-ev" data-ev="${esc(
+      e.id
+    )}">Remove</button></div>
+    </article>`;
+  }
+
+  function compareHTML(claim, st) {
+    const p = progress(claim);
+    const mineRes = C.posteriorOf(claim, S.me.ratings[claim.id]);
+    if (!isRevealed(claim.id)) {
+      return `<h3 class="step-title"><span class="step-n">3</span>Compare with the panel</h3>
+        <div class="locked"><p>The panel’s views stay hidden until you have weighed everything (${p.done} of ${p.total} answers so far), so they don’t anchor yours.</p>
+        <button class="btn-ghost sm" data-act="reveal">Show the panel now</button></div>`;
+    }
+    if (!st || st.n === 0) {
+      return `<h3 class="step-title"><span class="step-n">3</span>Compare with the panel</h3>
+        <div class="locked"><p>No other assessors have rated this claim yet. Import their ratings from the Data menu, or share yours with the facilitator.</p></div>`;
+    }
+    const idx = S.inquiry.claims.findIndex((c) => c.id === claim.id);
+    const next = S.inquiry.claims[idx + 1];
+    let rank = '';
+    if (mineRes) {
+      const below = st.rows.filter((r) => r.post < mineRes.post - 0.25).length;
+      const above = st.rows.filter((r) => r.post > mineRes.post + 0.25).length;
+      if (above > below) rank = `You are more sceptical than ${above} of ${st.n} assessors.`;
+      else if (below > above) rank = `You are more convinced than ${below} of ${st.n} assessors.`;
+      else rank = `You sit in the middle of the panel.`;
+    }
+    const diffs = st.ev
+      .filter((v) => v.mine && v.n >= 3)
+      .map((v) => ({ v, d: v.mine.impact - v.impMed }))
+      .filter((x) => Math.abs(x.d) >= 2)
+      .sort((a, b) => Math.abs(b.d) - Math.abs(a.d))
+      .slice(0, 3);
+    const diffList = diffs.length
+      ? `<ul class="diffs">${diffs
+          .map(
+            (x) => `<li><span class="d-title">${esc(x.v.e.title)}</span><span class="d-vs">You: ${esc(M.strengthLabel(x.v.mine.impact))} · Panel: ${esc(
+              M.strengthLabel(x.v.impMed)
+            )}</span></li>`
+          )
+          .join('')}</ul>`
+      : `<p class="step-hint">You weighed every piece of evidence much as the panel did.</p>`;
+    return `<h3 class="step-title"><span class="step-n">3</span>Compare with the panel</h3>
+      <div class="cmp-figs">
+        <div class="cmp-fig"><span>You</span><b>${mineRes ? M.pctDb(mineRes.post) : '—'}</b><em>${mineRes ? esc(M.verbalDb(mineRes.post)) : 'Set a starting belief'}</em></div>
+        <div class="cmp-fig"><span>Panel median</span><b>${M.pctDb(st.postMed)}</b><em>${esc(M.verbalDb(st.postMed))} · ${esc(C.agreementWord(st.postIqr).toLowerCase())}</em></div>
+      </div>
+      ${rank ? `<p>${esc(rank)}</p>` : ''}
+      <div class="strip-host" id="cmp-strip"></div>
+      <div class="legend"><span class="lg"><i class="lg-dot"></i>One assessor’s conclusion</span><span class="lg"><i class="lg-band"></i>Middle half</span><span class="lg"><i class="lg-med"></i>Median</span><span class="lg"><i class="lg-me"></i>You</span></div>
+      <h4 style="font-size:15px;margin-top:6px">Where you differ most</h4>
+      ${diffList}
+      <p class="step-hint">Differences are where the conversation should start: add a note to explain your weighting.</p>
+      <div class="next-row">${next ? `<button class="btn" data-claim="${esc(next.id)}">Next claim →</button>` : `<a class="btn" href="#report">See the funder report →</a>`}
+      <button class="btn-ghost" data-act="export-mine">Export my ratings</button></div>`;
+  }
+
+  function pathboxHTML(claim) {
+    const revealed = isRevealed(claim.id);
+    return `<div class="pb-head"><h3>Your belief path</h3><p class="pb-sub">Read from top to bottom: where you started, how each finding moved you, where you ended up.</p></div>
+      <div class="path-chart" id="path-chart"></div>
+      <div class="legend"><span class="lg"><i class="lg-for"></i>Supports</span><span class="lg"><i class="lg-against"></i>Opposes</span>${
+        revealed ? '<span class="lg"><i class="lg-panel"></i>Panel median path</span>' : ''
+      }</div>
+      ${
+        revealed
+          ? `<button class="btn-link" data-act="hide-panel" style="justify-self:start">Hide the panel</button>`
+          : `<div class="reveal-box">The panel’s path is hidden while you rate, so it doesn’t anchor you.<button class="btn-ghost sm" data-act="reveal">Show it anyway</button></div>`
+      }`;
+  }
+
+  function miniBarHTML(claim) {
+    const res = C.posteriorOf(claim, S.me.ratings[claim.id]);
+    const p = progress(claim);
+    return `<span>${res ? `Your conclusion <b>${M.pctDb(res.post)}</b> · ${esc(M.verbalDb(res.post))}` : 'Set your starting belief'}</span>
+      <span class="num" style="color:var(--ink-3)">${p.done}/${p.total}</span>
+      <button class="btn-ghost sm" data-act="to-path">Path ↓</button>`;
+  }
+
+  /* ---------- render ---------- */
+  views.assess = function (main) {
+    const claims = S.inquiry.claims;
+    if (!claims.length) {
+      main.innerHTML = `<div class="empty"><h3>No claims yet</h3><p>Start by writing down a claim your team wants to test, such as “Compound X slows disease Y in humans”.</p>
+        <button class="btn" data-act="add-claim">Add the first claim</button></div>`;
+      bind(main);
+      return;
+    }
+    if (!C.ui.claimId || !C.claim(C.ui.claimId)) C.ui.claimId = claims[0].id;
+    const claim = C.claim(C.ui.claimId);
+    const idx = claims.indexOf(claim);
+    const st = C.claimStats(claim, { includeMe: false });
+    const r = S.me.ratings[claim.id];
+    const p = progress(claim);
+
+    main.innerHTML = `<div class="assess">
+      <aside class="rail" aria-label="Claims" id="rail">${railHTML(claim.id)}</aside>
+      <section class="work" id="work">
+        <header class="claim-head">
+          <p class="eyebrow">Claim ${idx + 1} of ${claims.length}</p>
+          <h2 class="claim-title">${esc(claim.title)}</h2>
+          ${claim.statement ? `<p class="claim-statement">${esc(claim.statement)}</p>` : ''}
+          <div class="claim-tools"><button class="btn-link" data-act="edit-claim">Edit claim</button><button class="btn-link" data-act="del-claim">Delete claim</button></div>
+        </header>
+        <section class="step" id="step-prior">
+          <h3 class="step-title"><span class="step-n">1</span>Before weighing the evidence, how likely is this claim?</h3>
+          <p class="step-hint">Your honest starting point from background knowledge. The scale stretches near 0% and 100% because moving there takes ten times more evidence per step.</p>
+          ${credenceHTML(r ? r.prior : null)}
+        </section>
+        <section class="step" id="step-evidence">
+          <div class="step-row"><h3 class="step-title"><span class="step-n">2</span>Weigh each piece of evidence</h3><span class="step-count" id="ev-count">${p.rated} of ${claim.evidence.length} weighed</span></div>
+          <p class="step-hint">First: if the finding holds, which way does it push the claim, and how hard? Then: how far do you trust the finding itself? A strong finding you doubt counts for less.</p>
+          <div class="ev-list" id="ev-list">${claim.evidence.map((e, k) => cardHTML(claim, e, k, st)).join('') || '<p class="step-hint">No evidence yet.</p>'}</div>
+          <button class="btn-dashed" data-act="add-ev">+ Add a piece of evidence</button>
+        </section>
+        <section class="step" id="step-compare">${compareHTML(claim, C.claimStats(claim, { includeMe: true }))}</section>
+      </section>
+      <aside class="pathbox" aria-label="Your belief path" id="pathbox"><div class="pathbox-inner" id="pathbox-inner">${pathboxHTML(claim)}</div></aside>
+    </div>
+    <div class="mini-bar" id="mini-bar">${miniBarHTML(claim)}</div>`;
+
+    drawCharts(claim, st);
+    bind(main);
+  };
+
+  function drawCharts(claim, st) {
+    st = st || C.claimStats(claim, { includeMe: false });
+    const pathEl = document.getElementById('path-chart');
+    if (pathEl) C.charts.beliefPath(pathEl, claim, S.me.ratings[claim.id], isRevealed(claim.id) && st.n ? st : null);
+    document.querySelectorAll('[data-mini]').forEach((el) => {
+      const v = st.ev.find((x) => x.e.id === el.dataset.mini);
+      if (v) C.charts.miniCompare(el, v);
+    });
+    const strip = document.getElementById('cmp-strip');
+    if (strip) C.charts.strip(strip, C.claimStats(claim, { includeMe: true }), { compact: true });
+  }
+
+  /* Partial refresh after a rating change, keeping focus where it was. */
+  function refresh(claim, evId) {
+    const revealedNow = maybeAutoReveal(claim);
+    const st = C.claimStats(claim, { includeMe: false });
+    const active = document.activeElement;
+    const focusKey = active && (active.dataset.s != null ? 's' : active.dataset.t != null ? 't' : null);
+    const focusVal = focusKey && active.dataset[focusKey];
+
+    if (evId) {
+      const card = document.querySelector(`[data-card="${CSS.escape(evId)}"]`);
+      const e = claim.evidence.find((x) => x.id === evId);
+      if (card && e) {
+        const k = claim.evidence.indexOf(e);
+        card.outerHTML = cardHTML(claim, e, k, st);
+        if (focusKey) {
+          const again = document.querySelector(`[data-card="${CSS.escape(evId)}"] [data-${focusKey}="${focusVal}"]`);
+          if (again) again.focus();
+        }
+      }
+    }
+    if (revealedNow) {
+      // re-render every card so they all show the comparison
+      document.getElementById('ev-list').innerHTML = claim.evidence.map((e, k) => cardHTML(claim, e, k, st)).join('');
+      C.toast('All weighed. The panel’s views are now shown for comparison.');
+    }
+    const p = progress(claim);
+    document.getElementById('rail').innerHTML = railHTML(claim.id);
+    document.getElementById('ev-count').textContent = `${p.rated} of ${claim.evidence.length} weighed`;
+    document.getElementById('step-compare').innerHTML = compareHTML(claim, C.claimStats(claim, { includeMe: true }));
+    document.getElementById('pathbox-inner').innerHTML = pathboxHTML(claim);
+    document.getElementById('mini-bar').innerHTML = miniBarHTML(claim);
+    drawCharts(claim, st);
+    C.save();
+    C.renderHeader();
+  }
+
+  function updatePriorReadout(v) {
+    const p = M.toP(v);
+    const cred = document.getElementById('cred');
+    cred.classList.remove('is-unset');
+    document.getElementById('cred-big').textContent = M.pct(p);
+    document.getElementById('cred-verbal').textContent = M.verbal(p);
+    document.getElementById('cred-freq').textContent = M.chance(p);
+    const range = document.getElementById('prior-range');
+    range.setAttribute('aria-valuetext', M.pct(p) + ', ' + M.verbal(p));
+    cred.querySelectorAll('.preset').forEach((b) => b.classList.toggle('is-on', Math.abs(M.toDb(+b.dataset.p) - v) < 0.3));
+  }
+
+  let priorTimer = null;
+  function setPrior(claim, v, live) {
+    const r = C.myRating(claim.id, true);
+    r.prior = Math.round(v * 2) / 2;
+    updatePriorReadout(r.prior);
+    const pathEl = document.getElementById('path-chart');
+    const st = C.claimStats(claim, { includeMe: false });
+    if (pathEl) C.charts.beliefPath(pathEl, claim, r, isRevealed(claim.id) && st.n ? st : null);
+    clearTimeout(priorTimer);
+    priorTimer = setTimeout(() => refreshLight(claim), live ? 250 : 0);
+  }
+  function refreshLight(claim) {
+    maybeAutoReveal(claim);
+    document.getElementById('rail').innerHTML = railHTML(claim.id);
+    document.getElementById('mini-bar').innerHTML = miniBarHTML(claim);
+    document.getElementById('step-compare').innerHTML = compareHTML(claim, C.claimStats(claim, { includeMe: true }));
+    const strip = document.getElementById('cmp-strip');
+    if (strip) C.charts.strip(strip, C.claimStats(claim, { includeMe: true }), { compact: true });
+    C.save();
+    C.renderHeader();
+  }
+
+  function bind(main) {
+    if (main._assessBound) return;
+    main._assessBound = true;
+
+    main.addEventListener('click', (ev) => {
+      if (C.ui.view !== 'assess') return;
+      const t = ev.target.closest('button, [data-claim]');
+      if (!t) return;
+      const claim = C.claim(C.ui.claimId);
+
+      if (t.dataset.claim && !t.closest('.m-pt')) {
+        C.ui.claimId = t.dataset.claim;
+        views.assess(main);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      if (t.dataset.s != null && t.dataset.ev) {
+        const r = C.myRating(claim.id, true);
+        const cur = r.ev[t.dataset.ev] || {};
+        const s = +t.dataset.s;
+        r.ev[t.dataset.ev] = { ...cur, s, t: cur.t != null ? cur.t : 0.67 };
+        refresh(claim, t.dataset.ev);
+        return;
+      }
+      if (t.dataset.t != null && t.dataset.ev) {
+        const r = C.myRating(claim.id, true);
+        const cur = r.ev[t.dataset.ev];
+        if (!cur) return;
+        cur.t = +t.dataset.t;
+        refresh(claim, t.dataset.ev);
+        return;
+      }
+      if (t.dataset.p) {
+        const v = M.toDb(+t.dataset.p);
+        document.getElementById('prior-range').value = v;
+        setPrior(claim, v, false);
+        return;
+      }
+      const act = t.dataset.act;
+      if (!act) return;
+      if (act === 'reveal') {
+        S.settings.revealed[claim.id] = true;
+        C.save();
+        views.assess(main);
+      } else if (act === 'hide-panel') {
+        S.settings.revealed[claim.id] = false;
+        C.save();
+        views.assess(main);
+      } else if (act === 'add-claim') C.editClaim(null);
+      else if (act === 'edit-claim') C.editClaim(claim);
+      else if (act === 'del-claim') C.deleteClaim(claim);
+      else if (act === 'add-ev') C.editEvidence(claim, null);
+      else if (act === 'edit-ev') C.editEvidence(claim, claim.evidence.find((e) => e.id === t.dataset.ev));
+      else if (act === 'del-ev') C.deleteEvidence(claim, claim.evidence.find((e) => e.id === t.dataset.ev));
+      else if (act === 'export-mine') C.openExport('mine');
+      else if (act === 'to-path') document.getElementById('pathbox').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    main.addEventListener('input', (ev) => {
+      if (C.ui.view !== 'assess') return;
+      const t = ev.target;
+      const claim = C.claim(C.ui.claimId);
+      if (t.id === 'prior-range') setPrior(claim, +t.value, true);
+      else if (t.dataset.note) {
+        const r = C.myRating(claim.id, true);
+        const cur = r.ev[t.dataset.note] || {};
+        r.ev[t.dataset.note] = { ...cur, note: t.value };
+        C.save();
+      } else if (t.id === 'me-name') {
+        S.me.name = t.value;
+        C.save();
+      } else if (t.id === 'me-disc') {
+        S.me.discipline = t.value;
+        C.save();
+      }
+    });
+
+    // first touch on an unset slider should count as setting it
+    main.addEventListener('change', (ev) => {
+      if (C.ui.view !== 'assess') return;
+      if (ev.target.id === 'prior-range') setPrior(C.claim(C.ui.claimId), +ev.target.value, false);
+    });
+
+    // hovering a row of the belief path highlights the matching card
+    main.addEventListener('mouseover', (ev) => {
+      const g = ev.target.closest && ev.target.closest('.p-row');
+      document.querySelectorAll('.ev.is-focus').forEach((x) => x.classList.remove('is-focus'));
+      if (g) {
+        const card = document.querySelector(`[data-card="${CSS.escape(g.dataset.ev)}"]`);
+        if (card) card.classList.add('is-focus');
+      }
+    });
+    main.addEventListener('click', (ev) => {
+      const g = ev.target.closest && ev.target.closest('.p-row');
+      if (!g) return;
+      const card = document.querySelector(`[data-card="${CSS.escape(g.dataset.ev)}"]`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+})();
+
+</script>
+    <script>
+/*
+ * Credence — Report view (for funders and other non-experts).
+ * Overview: where the panel stands, and where funding would change minds.
+ * Claim detail: how the evidence moved the panel, and what moved it.
+ */
+(function () {
+  const C = (window.C = window.C || {});
+  const M = C.math;
+  const esc = C.esc;
+  const S = C.state;
+  const views = (C.views = C.views || {});
+
+  const q = (t) => `<q>${esc(t)}</q>`;
+
+  function listText(arr) {
+    if (arr.length <= 1) return arr.join('');
+    return arr.slice(0, -1).join(', ') + ' and ' + arr[arr.length - 1];
+  }
+
+  function lede(all) {
+    const by = (s) => all.filter((x) => x.status === s);
+    const parts = [];
+    const contested = by('contested');
+    const open = by('open');
+    const yes = by('settled-true');
+    const no = by('settled-false');
+    if (contested.length) parts.push(`Experts are split on ${listText(contested.map((s) => q(s.claim.title)))}.`);
+    if (yes.length)
+      parts.push(
+        `They consider ${listText(yes.map((s) => q(s.claim.title) + ' ' + esc(M.verbalDb(s.postMed).toLowerCase()) + ' (' + M.pctDb(s.postMed) + ')'))}.`
+      );
+    if (open.length) parts.push(`They agree that ${listText(open.map((s) => q(s.claim.title)))} ${open.length > 1 ? 'remain' : 'remains'} an open question.`);
+    if (no.length) parts.push(`They think ${listText(no.map((s) => q(s.claim.title)))} ${no.length > 1 ? 'are' : 'is'} unlikely.`);
+    if (!parts.length) return 'Not enough assessors have rated these claims yet to draw conclusions.';
+    return parts.join(' ');
+  }
+
+  function actionFor(s) {
+    const st = C.STATUS[s.status];
+    let type = s.status;
+    let label = st.action;
+    if (s.status.startsWith('settled') && s.repl) {
+      type = 'replicate';
+      label = 'Fund a replication';
+    }
+    return `<span class="act act-${type}">${esc(label)}</span>`;
+  }
+
+  function shiftText(s) {
+    if (s.n < 3) return '';
+    if (Math.abs(s.shift) < 0.8) return 'Evidence barely moved the panel';
+    return `${s.shift > 0 ? 'Up' : 'Down'} from ${M.pctDb(s.priorMed)} before evidence`;
+  }
+
+  function oppHTML(o) {
+    const s = o.stats;
+    const t = s.claim.title;
+    let kind;
+    let title;
+    let body;
+    if (o.type === 'settle') {
+      kind = 'Settle a disagreement';
+      title = `Resolve whether ${t.charAt(0).toLowerCase() + t.slice(1)}`;
+      body = `The middle half of the panel ranges from ${M.pctDb(s.postQ1)} to ${M.pctDb(s.postQ3)}. ${
+        o.ev ? `They disagree most about ${q(o.ev.e.title)}. A study that settles it would move the most minds.` : 'A decisive study would move the most minds.'
+      }`;
+    } else if (o.type === 'replicate') {
+      kind = 'Replicate';
+      title = o.ev.e.title;
+      body = `If this held up, the panel would count it as ${esc(M.strengthLabel(o.ev.sMed).toLowerCase())}. They trust it “${esc(
+        M.trustLabel(o.ev.tMed).toLowerCase()
+      )}”, so today it barely counts. An independent replication would show whether it should.`;
+    } else {
+      kind = 'Explore';
+      title = `Explore whether ${t.charAt(0).toLowerCase() + t.slice(1)}`;
+      body = `The panel agrees this is unresolved (median ${M.pctDb(s.postMed)}), and no finding yet counts strongly either way. Good ground for curiosity-led work.`;
+    }
+    const num = S.inquiry.claims.indexOf(s.claim) + 1;
+    return `<li class="opp opp-${o.type}"><span class="opp-kind"><span class="opp-claim">Claim ${num}</span>${esc(kind)}</span><h4 class="opp-title">${esc(title)}</h4><p class="opp-body">${body}</p>
+      <a class="opp-link" href="#report-${esc(s.claim.id)}">See the evidence →</a></li>`;
+  }
+
+  /* ---------- overview ---------- */
+  function overview(main) {
+    const claims = S.inquiry.claims;
+    if (!claims.length) {
+      main.innerHTML = `<div class="empty"><h3>Nothing to report yet</h3><p>Add claims and evidence in Assess, then gather ratings from your panel.</p><a class="btn" href="#assess">Go to Assess</a></div>`;
+      return;
+    }
+    const all = claims.map((c) => C.claimStats(c));
+    const nPeople = new Set(all.flatMap((s) => s.rows.map((r) => r.id))).size;
+    const nEv = claims.reduce((a, c) => a + c.evidence.length, 0);
+    const opps = C.opportunities(all);
+    const counts = {};
+    all.forEach((s) => (counts[s.status] = (counts[s.status] || 0) + 1));
+    const settled = all.filter((s) => s.status.startsWith('settled') && !s.repl);
+
+    const statusChips = Object.entries(C.STATUS)
+      .filter(([k]) => counts[k])
+      .map(([k, v]) => `<span class="pill pill-${v.tone}">${counts[k]} ${esc(v.short)}</span>`)
+      .join('');
+
+    const rows = all
+      .map((s, i) => {
+        const st = C.STATUS[s.status];
+        return `<li class="rc"><a class="rc-link" href="#report-${esc(s.claim.id)}">
+          <div class="rc-text"><span class="rc-num">${i + 1}</span><div><h4 class="rc-title">${esc(s.claim.title)}</h4>
+            <p class="rc-meta"><span class="pill pill-${st.tone}">${esc(st.label)}</span><span class="pill-plain">${esc(C.agreementWord(s.postIqr))} · ${s.n} assessors</span></p></div></div>
+          <div class="rc-fig">${s.n ? `<span class="rc-big num">${M.pctDb(s.postMed)}</span><span class="rc-verbal">${esc(M.verbalDb(s.postMed))}</span><span class="rc-shift">${esc(shiftText(s))}</span>` : '<span class="rc-verbal">No ratings yet</span>'}</div>
+          <div class="rc-strip" data-strip="${esc(s.claim.id)}"></div>
+          <div class="rc-act">${actionFor(s)}</div>
+        </a></li>`;
+      })
+      .join('');
+
+    const table = `<details class="r-table"><summary>Show the numbers as a table</summary><div class="tbl-wrap"><table>
+      <thead><tr><th>Claim</th><th class="num">Assessors</th><th class="num">Before evidence</th><th class="num">After evidence</th><th class="num">Middle half</th><th>Status</th></tr></thead>
+      <tbody>${all
+        .map(
+          (s) =>
+            `<tr><td>${esc(s.claim.title)}</td><td class="num">${s.n}</td><td class="num">${s.n ? M.pctDb(s.priorMed) : '—'}</td><td class="num">${
+              s.n ? M.pctDb(s.postMed) : '—'
+            }</td><td class="num">${s.n ? M.pctDb(s.postQ1) + '–' + M.pctDb(s.postQ3) : '—'}</td><td>${esc(C.STATUS[s.status].label)}</td></tr>`
+        )
+        .join('')}</tbody></table></div></details>`;
+
+    main.innerHTML = `<div class="report">
+      <section class="r-intro">
+        <p class="eyebrow">Report for funders</p>
+        <h2 class="r-title">What ${nPeople} assessor${nPeople === 1 ? '' : 's'} concluded from ${nEv} pieces of evidence</h2>
+        <p class="r-lede">${lede(all)}</p>
+        <div class="r-status">${statusChips}</div>
+        <div class="r-tools"><button class="btn-ghost sm" data-act="copy-summary">Copy summary as text</button></div>
+      </section>
+
+      <section class="r-sec">
+        <div class="r-sec-head"><h3>Where the panel stands</h3>
+          <p>Each dot is one assessor’s conclusion after weighing all the evidence. A tight cluster means agreement; a wide spread means experts disagree. Select a claim to see what drove it.</p></div>
+        <div class="legend"><span class="lg"><i class="lg-dot"></i>One assessor</span><span class="lg"><i class="lg-band"></i>Middle half of the panel</span><span class="lg"><i class="lg-med"></i>Median</span><span class="lg"><i class="lg-for"></i>Shift from before evidence</span>${
+          Object.keys(S.me.ratings).length ? '<span class="lg"><i class="lg-me"></i>You</span>' : ''
+        }</div>
+        <ol class="r-claims">${rows}</ol>
+        ${table}
+      </section>
+
+      <section class="r-sec">
+        <div class="r-sec-head"><h3>Where funding would change minds</h3>
+          <p>Money changes the most minds where experts disagree, where an important finding is doubted, or where everyone agrees the question is open. Settled claims gain little from more of the same.</p></div>
+        <div class="r-fund-grid">
+          <div><div class="r-map" id="r-map"></div>
+            <ol class="map-key">${all.map((s, i) => `<li><a href="#report-${esc(s.claim.id)}"><span class="mk-num">${i + 1}</span>${esc(s.claim.title)}</a></li>`).join('')}</ol></div>
+          <div>
+            ${opps.length ? `<ol class="opps" aria-label="Funding opportunities, most promising first">${opps.slice(0, 5).map(oppHTML).join('')}</ol>` : '<p class="step-hint">No clear opportunities yet: every claim is either settled or has too few assessors.</p>'}
+            ${
+              settled.length
+                ? `<p class="low-pri" style="margin-top:10px"><b>Lower priority:</b> ${listText(settled.map((s) => q(s.claim.title)))} ${
+                    settled.length > 1 ? 'look' : 'looks'
+                  } settled. Fund further work there only if it could overturn the consensus.</p>`
+                : ''
+            }
+          </div>
+        </div>
+      </section>
+    </div>`;
+
+    drawOverview(all);
+  }
+
+  function drawOverview(all) {
+    document.querySelectorAll('[data-strip]').forEach((el) => {
+      const s = all.find((x) => x.claim.id === el.dataset.strip);
+      if (s) C.charts.strip(el, s);
+    });
+    const map = document.getElementById('r-map');
+    if (map) C.charts.map(map, all, (cid) => (location.hash = 'report-' + cid));
+  }
+
+  /* ---------- claim detail ---------- */
+  function detail(main, cid) {
+    const claim = C.claim(cid);
+    if (!claim) {
+      location.hash = 'report';
+      return;
+    }
+    const idx = S.inquiry.claims.indexOf(claim);
+    const s = C.claimStats(claim);
+    const st = C.STATUS[s.status];
+    const narrowed = s.postIqr < s.priorIqr - 1;
+    const widened = s.postIqr > s.priorIqr + 1;
+
+    let sentence = 'Too few assessors have rated this claim to summarise it.';
+    if (s.n >= 3) {
+      sentence = `The panel thinks this is ${esc(M.verbalDb(s.postMed).toLowerCase())} (median ${M.pctDb(s.postMed)}). `;
+      if (Math.abs(s.shift) >= 0.8)
+        sentence += `Weighing the evidence moved them ${s.shift > 0 ? 'up' : 'down'} from ${M.pctDb(s.priorMed)}${
+          narrowed ? ' and brought their views closer together.' : widened ? ', but their views spread further apart.' : '.'
+        }`;
+      else sentence += 'The evidence barely moved them overall.';
+      if (s.status === 'contested') sentence += ' Assessors remain split.';
+    }
+
+    let actionBody = '';
+    if (s.status === 'contested')
+      actionBody = s.crux
+        ? `Experts disagree most about ${q(s.crux.e.title)}. Work that settles it would move the most minds.`
+        : 'A decisive study would move the most minds.';
+    else if (s.status === 'open') actionBody = 'The panel agrees this is unresolved. Exploratory, curiosity-led work could move it either way.';
+    else if (s.status.startsWith('settled'))
+      actionBody = s.repl
+        ? `The view looks settled, but ${q(s.repl.e.title)} would matter if it held up. Only a replication is likely to change minds here.`
+        : 'More confirmatory work is unlikely to change minds. Fund work here only if it could overturn the consensus.';
+    else actionBody = 'Recruit at least three assessors before drawing conclusions.';
+
+    const sorted = [...s.ev].sort((a, b) => Math.abs(b.impMed || 0) - Math.abs(a.impMed || 0));
+    const rows = sorted
+      .map((v) => {
+        const isCrux = s.crux && s.crux.e.id === v.e.id;
+        const isRepl = s.repl && s.repl.e.id === v.e.id;
+        return `<div class="imp-row${isCrux ? ' is-crux' : ''}${isRepl ? ' is-repl' : ''}">
+          <div class="imp-text"><p class="imp-title">${esc(v.e.title)}</p>
+            <p class="imp-meta">${v.e.kind ? `<span class="tag">${esc(v.e.kind)}</span>` : ''}${C.statusBadge(v.e.status)}<span>${v.n} rated</span>${
+          v.n ? `<span>· trusted “${esc(M.trustLabel(v.tMed).toLowerCase())}”</span>` : ''
+        }</p></div>
+          <div class="imp-chart" data-imp="${esc(v.e.id)}"></div>
+          <div class="imp-word">${v.n ? esc(M.strengthLabel(v.impMed)) : 'Not rated'}${
+          v.n && Math.abs(v.sMed - v.impMed) >= 3 ? `<small>${esc(M.strengthLabel(v.sMed))} if fully trusted</small>` : ''
+        }${isCrux ? '<span class="flag flag-crux">Most disputed</span>' : ''}${isRepl ? '<span class="flag flag-repl">Replicate</span>' : ''}</div>
+        </div>`;
+      })
+      .join('');
+
+    const callouts = [];
+    if (s.crux)
+      callouts.push(`<div class="callout c-crux"><h4>Where experts disagree most</h4><p>${q(s.crux.e.title)}. Most assessors weigh it somewhere between ${esc(
+        M.strengthLabel(s.crux.impP10).toLowerCase()
+      )} and ${esc(M.strengthLabel(s.crux.impP90).toLowerCase())}. Settling this finding would do most to bring the panel together.</p></div>`);
+    if (s.repl)
+      callouts.push(`<div class="callout c-repl"><h4>Important but doubted</h4><p>${q(s.repl.e.title)} would count as ${esc(
+        M.strengthLabel(s.repl.sMed).toLowerCase()
+      )} if it held up, but the panel trusts it “${esc(M.trustLabel(s.repl.tMed).toLowerCase())}”. An independent replication would show whether it should count.</p></div>`);
+    if (s.n >= 3)
+      callouts.push(`<div class="callout c-conv"><h4>${narrowed ? 'Evidence brought the panel together' : widened ? 'Evidence pulled the panel apart' : 'Spread of views'}</h4>
+        <p>Before weighing evidence, the middle half of the panel sat between ${M.pctDb(s.priorQ1)} and ${M.pctDb(s.priorQ3)}. Afterwards: ${M.pctDb(s.postQ1)} to ${M.pctDb(
+        s.postQ3
+      )}.</p></div>`);
+
+    main.innerHTML = `<div class="report">
+      <a class="back" href="#report">← All claims</a>
+      <section class="r-intro">
+        <p class="eyebrow">Claim ${idx + 1} · ${esc(st.label)}</p>
+        <h2 class="r-title">${esc(claim.title)}</h2>
+        ${claim.statement ? `<p class="claim-statement">${esc(claim.statement)}</p>` : ''}
+        <div class="rd-top" style="margin-top:8px">
+          <div style="display:grid;gap:12px">
+            <div class="rd-num">${s.n ? `<span class="rc-big num">${M.pctDb(s.postMed)}</span><span class="rd-verbal">${esc(M.verbalDb(s.postMed))}</span><span class="rd-range">Middle half of the panel: ${M.pctDb(s.postQ1)} to ${M.pctDb(
+      s.postQ3
+    )} · ${esc(C.agreementWord(s.postIqr).toLowerCase())} · ${s.n} assessors</span>` : '<span class="rd-verbal">No ratings yet</span>'}</div>
+            <p class="rd-sentence">${sentence}</p>
+          </div>
+          <div class="rd-action">${actionFor(s)}<p>${actionBody}</p></div>
+        </div>
+      </section>
+
+      <section class="r-sec">
+        <div class="r-sec-head"><h3>How the evidence moved the panel</h3>
+          <p>Each line is one assessor, from their starting belief (top) to their conclusion after weighing the evidence (bottom). The thick line is the median. Shaded bars show the middle half of the panel.</p></div>
+        <div id="rd-slope"></div>
+        <div class="legend"><span class="lg"><i class="lg-panel"></i>One assessor</span><span class="lg"><i class="lg-med" style="width:16px;height:3px"></i>Median</span>${
+          s.rows.some((r) => r.isMe) ? '<span class="lg"><i class="lg-me"></i>You</span>' : ''
+        }</div>
+      </section>
+
+      <section class="r-sec">
+        <div class="r-sec-head"><h3>What moved the panel</h3>
+          <p>Solid bars show how much each finding counts once the panel’s trust in it is applied. Outlines show how much it would count if fully trusted: a big gap marks a finding that matters but is doubted. Whiskers show the middle half of assessors.</p></div>
+        <div class="legend"><span class="lg"><i class="lg-fill"></i>Counts as weighed</span><span class="lg"><i class="lg-pot"></i>If fully trusted</span>${
+          s.ev.some((v) => v.mine) ? '<span class="lg"><i class="lg-me" style="border-radius:0;clip-path:polygon(0 0,100% 0,50% 100%)"></i>You</span>' : ''
+        }</div>
+        <div class="imp-list">
+          <div class="imp-head"><div></div><div id="imp-axis"></div><div></div></div>
+          ${rows || '<p class="step-hint">No evidence yet.</p>'}
+        </div>
+      </section>
+
+      ${callouts.length ? `<section class="callouts">${callouts.join('')}</section>` : ''}
+
+      <div class="r-tools"><a class="btn-ghost" href="#report">← All claims</a><button class="btn-ghost" data-act="copy-claim" data-claim-id="${esc(
+        claim.id
+      )}">Copy this summary</button><button class="btn" data-act="assess-claim" data-claim-id="${esc(claim.id)}">Rate this claim yourself</button></div>
+    </div>`;
+
+    const slope = document.getElementById('rd-slope');
+    if (slope) C.charts.slope(slope, s);
+    const axis = document.getElementById('imp-axis');
+    if (axis) C.charts.impactHeader(axis);
+    document.querySelectorAll('[data-imp]').forEach((el) => {
+      const v = s.ev.find((x) => x.e.id === el.dataset.imp);
+      if (v) C.charts.impactRow(el, v);
+    });
+  }
+
+  views.report = function (main, cid) {
+    if (cid) detail(main, cid);
+    else overview(main);
+    bind(main);
+  };
+
+  /* ---------- plain-text summaries for memos ---------- */
+  C.summaryText = function (cid) {
+    const claims = cid ? [C.claim(cid)] : S.inquiry.claims;
+    const lines = [];
+    lines.push(S.inquiry.title);
+    if (C.sampleActive()) lines.push('(Illustrative panel: ratings are simulated for this prototype.)');
+    lines.push('');
+    for (const c of claims) {
+      const s = C.claimStats(c);
+      lines.push('• ' + c.title);
+      if (s.n >= 1) {
+        lines.push(
+          `  Panel median ${M.pctDb(s.postMed)} (${M.verbalDb(s.postMed).toLowerCase()}), middle half ${M.pctDb(s.postQ1)}–${M.pctDb(s.postQ3)}, ${s.n} assessors. ${C.STATUS[s.status].label}.`
+        );
+        if (Math.abs(s.shift) >= 0.8) lines.push(`  Evidence moved the panel from ${M.pctDb(s.priorMed)} to ${M.pctDb(s.postMed)}.`);
+        if (s.crux) lines.push(`  Most disputed evidence: ${s.crux.e.title}.`);
+        if (s.repl) lines.push(`  Worth replicating: ${s.repl.e.title}.`);
+        lines.push(`  Suggested action: ${C.STATUS[s.status].action}.`);
+      } else lines.push('  No ratings yet.');
+      lines.push('');
+    }
+    return lines.join('\n');
+  };
+
+  function bind(main) {
+    if (main._reportBound) return;
+    main._reportBound = true;
+    main.addEventListener('click', (ev) => {
+      if (C.ui.view !== 'report') return;
+      const t = ev.target.closest('button');
+      if (!t) return;
+      if (t.dataset.act === 'copy-summary') C.copyText(C.summaryText(), 'Summary copied. Paste it into your memo.');
+      else if (t.dataset.act === 'copy-claim') C.copyText(C.summaryText(t.dataset.claimId), 'Claim summary copied.');
+      else if (t.dataset.act === 'assess-claim') {
+        C.ui.claimId = t.dataset.claimId;
+        location.hash = 'assess';
+      }
+    });
+  }
+})();
+
+</script>
+    <script>
+/*
+ * Credence — Method view: how to read the numbers, and how to run it at a jam.
+ */
+(function () {
+  const C = (window.C = window.C || {});
+  const M = C.math;
+  const esc = C.esc;
+  const views = (C.views = C.views || {});
+
+  views.method = function (main) {
+    const ladder = [0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99]
+      .map((p) => {
+        const db = M.toDb(p);
+        return `<tr><td class="num">${M.pct(p)}</td><td>${esc(M.verbal(p))}</td><td>${esc(M.chance(p))}</td><td class="num">${db > 0 ? '+' : ''}${db.toFixed(1)} dB</td></tr>`;
+      })
+      .join('');
+    const steps = M.STEPS.filter((s) => s > 0)
+      .map((s) => `<tr><td>${esc(M.strengthWord(s))}</td><td class="num">×${M.factor(s) >= 10 ? Math.round(M.factor(s)) : M.factor(s).toFixed(1)}</td><td class="num">${s} dB</td></tr>`)
+      .join('');
+
+    main.innerHTML = `<div class="method">
+      <section class="r-intro">
+        <p class="eyebrow">Method</p>
+        <h2 class="r-title">How Credence turns expert judgement into a decision</h2>
+        <p class="r-lede">Science doesn’t prove claims; evidence shifts how credible they are. Credence asks experts two simple questions about each claim and each finding, combines their answers with Bayes’ rule, and shows non-experts where the field stands and where money would change minds.</p>
+      </section>
+
+      <section class="r-sec two-col">
+        <div class="prose">
+          <h3>Two roles</h3>
+          <p><b>Assessors</b> are the experts. For each claim they give a starting belief, then weigh each piece of evidence: which way it pushes, how hard, and how far they trust it. They see how each answer moves them, and only then how the rest of the panel answered.</p>
+          <p><b>Funders</b> read the report. It shows what the panel concluded, how much they agree, which evidence carried the most weight, and where a study would change the most minds.</p>
+        </div>
+        <div class="prose">
+          <h3>How the numbers combine</h3>
+          <p>Evidence multiplies the odds of a claim. Credence keeps score in <b>decibans</b>, Alan Turing’s codebreaking unit: ten times the logarithm of the odds. In decibans, evidence simply adds up.</p>
+          <div class="formula">conclusion = starting belief<br>&nbsp;&nbsp;+ Σ (strength if true × trust)</div>
+          <p>Trust is a simplification of how the existing prototype weights a premise by its credibility: a finding you trust “mostly” counts for two thirds of its strength.</p>
+        </div>
+      </section>
+
+      <section class="r-sec two-col">
+        <div class="prose">
+          <h3>Reading credence</h3>
+          <p>Every number comes with words from the IPCC’s calibrated scale and a natural frequency, so non-experts don’t have to interpret percentages alone.</p>
+          <div class="tbl-wrap"><table><thead><tr><th class="num">Credence</th><th>In words</th><th>As a frequency</th><th class="num">Decibans</th></tr></thead><tbody>${ladder}</tbody></table></div>
+        </div>
+        <div class="prose">
+          <h3>Strength of evidence</h3>
+          <p>Assessors pick a band, not a number. Each band multiplies the odds by roughly the amount shown; opposition divides them.</p>
+          <div class="tbl-wrap"><table><thead><tr><th>Band</th><th class="num">Odds ×</th><th class="num">Decibans</th></tr></thead><tbody>${steps}</tbody></table></div>
+        </div>
+      </section>
+
+      <section class="r-sec prose" style="max-width:none">
+        <h3>How the panel is summarised</h3>
+        <ul>
+          <li><b>Median</b>: half the panel is above, half below. Robust to one extreme assessor.</li>
+          <li><b>Middle half</b>: the range holding the central 50% of assessors. Its width is the measure of disagreement.</li>
+          <li><b>Split</b>: the middle half is wider than 20%–80% (12 dB). <b>Mixed</b>: 5–12 dB. <b>Broad agreement</b>: under 5 dB.</li>
+          <li><b>Open question</b>: assessors agree, and the median sits between 25% and 75%.</li>
+          <li><b>Most disputed evidence</b>: the finding whose weighting varies most across assessors. Settling it would do most to close the gap.</li>
+          <li><b>Worth replicating</b>: a finding the panel would count as at least moderate if true, but whose median trust is “doubtful” or lower. The gap between the outline and the solid bar is what a replication could unlock.</li>
+        </ul>
+      </section>
+
+      <section class="r-sec two-col">
+        <div class="prose">
+          <h3>Design choices</h3>
+          <ul>
+            <li><b>Blind first, then compare.</b> The panel stays hidden until you have weighed everything, so early views can’t anchor later ones.</li>
+            <li><b>One point, not a range.</b> Each assessor gives a single answer. Uncertainty shows up as disagreement across the panel, where it is easiest to read.</li>
+            <li><b>Top to bottom.</b> The belief path reads in the order you reason: start, each finding, conclusion.</li>
+            <li><b>Words before decibans.</b> The maths stays underneath; the interface speaks in percentages, frequencies and plain labels.</li>
+            <li><b>Colour-blind safe.</b> Blue supports and orange opposes, instead of green and red. Every colour also has a label.</li>
+          </ul>
+        </div>
+        <div class="prose">
+          <h3>Running it at a science jam</h3>
+          <ol>
+            <li>A team writes its claims and evidence in Assess (or imports an inquiry file from the Data menu).</li>
+            <li>Turn off the illustrative panel in the Data menu so only real ratings count.</li>
+            <li>Each assessor rates on their own device, then uses <b>Export my ratings</b> and sends the file to the facilitator.</li>
+            <li>The facilitator imports every file. The report updates with the real panel.</li>
+            <li>Discuss the most disputed evidence first: it is where minds are most likely to move.</li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="r-sec prose" style="max-width:none">
+        <h3>Limits of this prototype</h3>
+        <ul>
+          <li>The 20 assessors in the sample are fictional, and their ratings are simulated. The studies cited are real.</li>
+          <li>Ratings live in this browser and move between people as files. A shared live panel would need a small backend.</li>
+          <li>Trust is applied as a simple weight. A full model would treat each premise as a claim with its own credence, as the existing evidence diagrams do.</li>
+          <li>The prototype doesn’t yet score assessors (contribution, expertise or inquiry scores) or reward them.</li>
+        </ul>
+      </section>
+    </div>`;
+  };
+})();
+
+</script>
+    <script>
+/*
+ * Credence — app shell: routing, inquiry header, data menu, editors, tooltip and toast.
+ */
+(function () {
+  const C = (window.C = window.C || {});
+  const M = C.math;
+  const esc = C.esc;
+  const S = C.state;
+  const main = document.getElementById('main');
+
+  C.ui = { view: 'assess', claimId: null, reportClaim: null };
+
+  /* ---------- header ---------- */
+  C.renderHeader = function () {
+    const el = document.getElementById('inq');
+    const claims = S.inquiry.claims;
+    const nEv = claims.reduce((a, c) => a + c.evidence.length, 0);
+    const people = C.people(Object.keys(S.me.ratings).length > 0).length;
+    const mine = claims.filter((c) => {
+      const r = S.me.ratings[c.id];
+      return r && r.prior != null;
+    }).length;
+    el.innerHTML = `<div class="wrap inq">
+      <div class="inq-row">
+        <div class="inq-main">
+          <p class="eyebrow">${esc(S.inquiry.field || 'Inquiry')}</p>
+          <h1 class="inq-title">${esc(S.inquiry.title || 'Untitled inquiry')}</h1>
+          ${S.inquiry.description ? `<p class="inq-desc">${esc(S.inquiry.description)}</p>` : ''}
+        </div>
+        <div class="inq-meta">
+          <span><b class="num">${claims.length}</b>claims</span>
+          <span><b class="num">${nEv}</b>pieces of evidence</span>
+          <span><b class="num">${people}</b>assessors</span>
+          <span><b class="num">${mine}/${claims.length}</b>rated by you</span>
+        </div>
+      </div>
+      ${
+        C.sampleActive()
+          ? `<div class="notice"><span class="notice-ico" aria-hidden="true">!</span><span><b>Sample inquiry.</b> The studies are real; the 20 assessors and their ratings are fictional, simulated to show how a panel reads. Turn the sample panel off in <button class="btn-link" data-act="open-data">Data</button> when running with real people.</span></div>`
+          : ''
+      }
+    </div>`;
+  };
+
+  /* ---------- routing ---------- */
+  function route() {
+    const h = (location.hash || '#assess').slice(1);
+    let view = 'assess';
+    let arg = null;
+    if (h === 'report') view = 'report';
+    else if (h.startsWith('report-')) {
+      view = 'report';
+      arg = h.slice(7);
+    } else if (h === 'method') view = 'method';
+    C.ui.view = view;
+    document.querySelectorAll('.tab').forEach((t) => {
+      if (t.dataset.view === view) t.setAttribute('aria-current', 'page');
+      else t.removeAttribute('aria-current');
+    });
+    hideTip();
+    C.renderHeader();
+    if (view === 'report') C.views.report(main, arg);
+    else if (view === 'method') C.views.method(main);
+    else C.views.assess(main);
+    if (!C._firstRoute) window.scrollTo(0, 0);
+    C._firstRoute = false;
+  }
+  C.rerender = route;
+  C._firstRoute = true;
+  window.addEventListener('hashchange', route);
+
+  let resizeTimer = null;
+  let lastW = window.innerWidth;
+  window.addEventListener('resize', () => {
+    if (Math.abs(window.innerWidth - lastW) < 8) return;
+    lastW = window.innerWidth;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(route, 160);
+  });
+
+  /* ---------- tooltip ---------- */
+  const tip = document.getElementById('tooltip');
+  function hideTip() {
+    tip.hidden = true;
+  }
+  document.addEventListener('mousemove', (ev) => {
+    const t = ev.target.closest && ev.target.closest('[data-tip]');
+    if (!t) return hideTip();
+    tip.innerHTML = t.getAttribute('data-tip');
+    tip.hidden = false;
+    const pad = 14;
+    const r = tip.getBoundingClientRect();
+    let x = ev.clientX + pad;
+    let y = ev.clientY + pad;
+    if (x + r.width > window.innerWidth - 8) x = ev.clientX - r.width - pad;
+    if (y + r.height > window.innerHeight - 8) y = ev.clientY - r.height - pad;
+    tip.style.left = Math.max(8, x) + 'px';
+    tip.style.top = Math.max(8, y) + 'px';
+  });
+  document.addEventListener('scroll', hideTip, { passive: true });
+
+  /* ---------- toast ---------- */
+  let toastTimer = null;
+  C.toast = function (msg) {
+    let el = document.getElementById('toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'toast';
+      el.className = 'toast';
+      el.setAttribute('role', 'status');
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => (el.hidden = true), 3200);
+  };
+
+  C.copyText = function (text, okMsg) {
+    const fallback = () => C.showText('Copy this text', text);
+    try {
+      navigator.clipboard.writeText(text).then(() => C.toast(okMsg || 'Copied.'), fallback);
+    } catch (e) {
+      fallback();
+    }
+  };
+
+  /* ---------- modal ---------- */
+  const modalRoot = document.getElementById('modal-root');
+  let lastFocus = null;
+  C.modal = function (opts) {
+    lastFocus = document.activeElement;
+    modalRoot.innerHTML = `<div class="modal-back" data-close>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <h2 id="modal-title">${esc(opts.title)}</h2>
+        <div class="modal-body">${opts.body}</div>
+        <p class="err" id="modal-err" hidden></p>
+        <div class="modal-actions">${(opts.actions || [])
+          .map((a, i) => `<button type="button" class="${a.primary ? 'btn' : 'btn-ghost'}" data-mact="${i}">${esc(a.label)}</button>`)
+          .join('')}</div>
+      </div></div>`;
+    const back = modalRoot.firstElementChild;
+    const close = () => {
+      modalRoot.innerHTML = '';
+      document.removeEventListener('keydown', onKey);
+      if (lastFocus && lastFocus.focus) lastFocus.focus();
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') close();
+    };
+    document.addEventListener('keydown', onKey);
+    back.addEventListener('click', (e) => {
+      if (e.target === back) close();
+      const b = e.target.closest('[data-mact]');
+      if (!b) return;
+      const a = opts.actions[+b.dataset.mact];
+      if (!a.onClick) return close();
+      try {
+        const keep = a.onClick(back);
+        if (keep !== true) close();
+      } catch (err) {
+        const el = back.querySelector('#modal-err');
+        el.textContent = err.message;
+        el.hidden = false;
+      }
+    });
+    if (opts.onOpen) opts.onOpen(back);
+    const first = back.querySelector('input, textarea, select, button');
+    if (first) first.focus();
+    return { close, el: back };
+  };
+
+  C.showText = function (title, text) {
+    C.modal({
+      title,
+      body: `<textarea class="field code" readonly id="show-text">${esc(text)}</textarea>`,
+      actions: [{ label: 'Close' }],
+      onOpen: (el) => el.querySelector('#show-text').select(),
+    });
+  };
+
+  /* ---------- editors ---------- */
+  const KINDS = ['Clinical trial', 'Cohort', 'Observational', 'Natural experiment', 'Meta-analysis', 'Genetics', 'Imaging', 'Pathology', 'Lab / animal', 'Review', 'Methods', 'Other'];
+  const STATUSES = ['Single study', 'Replicated', 'Replication', 'Contested', 'Retracted'];
+
+  C.editClaim = function (claim) {
+    const isNew = !claim;
+    C.modal({
+      title: isNew ? 'Add a claim' : 'Edit claim',
+      body: `<div class="form-row"><label for="f-title">Claim, in one short sentence</label><input class="field" id="f-title" maxlength="140" value="${esc(
+        claim ? claim.title : ''
+      )}" placeholder="e.g. Compound X slows disease Y in humans"></div>
+        <div class="form-row"><label for="f-stmt">Precise statement (optional)</label><textarea class="field" id="f-stmt" rows="3" placeholder="What exactly would have to be true?">${esc(
+          claim ? claim.statement : ''
+        )}</textarea></div>`,
+      actions: [
+        { label: 'Cancel' },
+        {
+          label: isNew ? 'Add claim' : 'Save',
+          primary: true,
+          onClick: (el) => {
+            const title = el.querySelector('#f-title').value.trim();
+            if (!title) throw new Error('Write the claim first.');
+            const statement = el.querySelector('#f-stmt').value.trim();
+            if (isNew) {
+              const c = { id: C.uid('c-'), title, statement, evidence: [] };
+              S.inquiry.claims.push(c);
+              C.ui.claimId = c.id;
+            } else {
+              claim.title = title;
+              claim.statement = statement;
+            }
+            C.save();
+            if (location.hash !== '#assess' && location.hash !== '') location.hash = 'assess';
+            else route();
+          },
+        },
+      ],
+    });
+  };
+
+  C.deleteClaim = function (claim) {
+    C.modal({
+      title: 'Delete this claim?',
+      body: `<p>${esc(claim.title)}</p><p class="step-hint">Its evidence and everyone’s ratings for it will be removed from this browser.</p>`,
+      actions: [
+        { label: 'Keep it' },
+        {
+          label: 'Delete claim',
+          primary: true,
+          onClick: () => {
+            S.inquiry.claims = S.inquiry.claims.filter((c) => c !== claim);
+            delete S.me.ratings[claim.id];
+            C.ui.claimId = null;
+            C.save();
+            route();
+          },
+        },
+      ],
+    });
+  };
+
+  C.editEvidence = function (claim, e) {
+    const isNew = !e;
+    const src = (e && e.source) || {};
+    C.modal({
+      title: isNew ? 'Add a piece of evidence' : 'Edit evidence',
+      body: `<div class="form-row"><label for="f-title">Finding, in one sentence</label><input class="field" id="f-title" maxlength="160" value="${esc(
+        e ? e.title : ''
+      )}" placeholder="What did the study find?"></div>
+        <div class="form-row"><label for="f-sum">Summary (optional)</label><textarea class="field" id="f-sum" rows="3" placeholder="Design, size, key numbers">${esc(
+          e ? e.summary : ''
+        )}</textarea></div>
+        <div class="form-grid">
+          <div class="form-row"><label for="f-src">Source</label><input class="field" id="f-src" value="${esc(src.label || '')}" placeholder="Author et al., Journal"></div>
+          <div class="form-row"><label for="f-year">Year</label><input class="field" id="f-year" inputmode="numeric" value="${esc(src.year || '')}"></div>
+        </div>
+        <div class="form-row"><label for="f-url">Link (DOI, PubMed or preprint)</label><input class="field" id="f-url" type="url" value="${esc(src.url || '')}" placeholder="https://"></div>
+        <div class="form-grid">
+          <div class="form-row"><label for="f-kind">Type of evidence</label><select class="field" id="f-kind">${KINDS.map(
+            (k) => `<option${e && e.kind === k ? ' selected' : ''}>${esc(k)}</option>`
+          ).join('')}</select></div>
+          <div class="form-row"><label for="f-status">Status</label><select class="field" id="f-status">${STATUSES.map(
+            (k) => `<option${e && e.status === k ? ' selected' : ''}>${esc(k)}</option>`
+          ).join('')}</select></div>
+        </div>`,
+      actions: [
+        { label: 'Cancel' },
+        {
+          label: isNew ? 'Add evidence' : 'Save',
+          primary: true,
+          onClick: (el) => {
+            const title = el.querySelector('#f-title').value.trim();
+            if (!title) throw new Error('Describe the finding first.');
+            const url = el.querySelector('#f-url').value.trim();
+            if (url && !/^https?:\/\//i.test(url)) throw new Error('Links must start with http:// or https://');
+            const data = {
+              title,
+              summary: el.querySelector('#f-sum').value.trim(),
+              source: { label: el.querySelector('#f-src').value.trim(), year: el.querySelector('#f-year').value.trim(), url },
+              kind: el.querySelector('#f-kind').value,
+              status: el.querySelector('#f-status').value,
+            };
+            if (isNew) claim.evidence.push({ id: C.uid('e-'), ...data });
+            else Object.assign(e, data);
+            C.save();
+            route();
+          },
+        },
+      ],
+    });
+  };
+
+  C.deleteEvidence = function (claim, e) {
+    C.modal({
+      title: 'Remove this evidence?',
+      body: `<p>${esc(e.title)}</p>`,
+      actions: [
+        { label: 'Keep it' },
+        {
+          label: 'Remove',
+          primary: true,
+          onClick: () => {
+            claim.evidence = claim.evidence.filter((x) => x !== e);
+            const r = S.me.ratings[claim.id];
+            if (r && r.ev) delete r.ev[e.id];
+            C.save();
+            route();
+          },
+        },
+      ],
+    });
+  };
+
+  /* ---------- export / import ---------- */
+  function download(name, text) {
+    try {
+      const blob = new Blob([text], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        URL.revokeObjectURL(a.href);
+        a.remove();
+      }, 500);
+    } catch (e) {
+      /* sandboxed viewers block downloads; Copy still works */
+    }
+  }
+  const slug = (s) =>
+    String(s || 'assessor')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 40) || 'assessor';
+
+  C.openExport = function (what) {
+    const data = what === 'mine' ? C.exportMine() : C.exportInquiry();
+    const text = JSON.stringify(data, null, 2);
+    const name = what === 'mine' ? `credence-ratings-${slug(S.me.name)}.json` : `credence-inquiry-${slug(S.inquiry.title)}.json`;
+    const nameField =
+      what === 'mine'
+        ? `<div class="form-grid"><div class="form-row"><label for="x-name">Your name</label><input class="field" id="x-name" value="${esc(
+            S.me.name
+          )}" placeholder="So the facilitator knows whose file this is"></div><div class="form-row"><label for="x-disc">Your field</label><input class="field" id="x-disc" value="${esc(
+            S.me.discipline
+          )}"></div></div>`
+        : '';
+    C.modal({
+      title: what === 'mine' ? 'Export my ratings' : 'Export the whole inquiry',
+      body: `${nameField}<p class="step-hint">${
+        what === 'mine'
+          ? 'Send this file (or the copied text) to your facilitator. They import it to add you to the panel.'
+          : 'Includes claims, evidence and every imported rating. Share it so another team can continue or audit the inquiry.'
+      }</p><textarea class="field code" id="x-text" readonly>${esc(text)}</textarea>`,
+      actions: [
+        { label: 'Close' },
+        {
+          label: 'Download file',
+          onClick: (el) => {
+            download(name, el.querySelector('#x-text').value);
+            return true;
+          },
+        },
+        {
+          label: 'Copy',
+          primary: true,
+          onClick: (el) => {
+            C.copyText(el.querySelector('#x-text').value, 'Copied. Paste it into a message to your facilitator.');
+          },
+        },
+      ],
+      onOpen: (el) => {
+        const upd = () => {
+          S.me.name = el.querySelector('#x-name').value;
+          S.me.discipline = el.querySelector('#x-disc').value;
+          C.save();
+          el.querySelector('#x-text').value = JSON.stringify(C.exportMine(), null, 2);
+        };
+        if (what === 'mine') {
+          el.querySelector('#x-name').addEventListener('input', upd);
+          el.querySelector('#x-disc').addEventListener('input', upd);
+        }
+      },
+    });
+  };
+
+  C.openImport = function () {
+    C.modal({
+      title: 'Import ratings or an inquiry',
+      body: `<p class="step-hint">Choose one or more files exported from Credence, or paste the text of one.</p>
+        <input type="file" id="i-files" accept="application/json,.json" multiple class="field">
+        <textarea class="field code" id="i-text" placeholder="…or paste exported text here"></textarea>`,
+      actions: [
+        { label: 'Cancel' },
+        {
+          label: 'Import',
+          primary: true,
+          onClick: (el) => {
+            const files = el.querySelector('#i-files').files;
+            const text = el.querySelector('#i-text').value.trim();
+            if (!files.length && !text) throw new Error('Choose a file or paste some text first.');
+            const msgs = [];
+            const finish = () => {
+              C.toast(msgs.join(' '));
+              route();
+            };
+            if (text) {
+              let obj;
+              try {
+                obj = JSON.parse(text);
+              } catch (e) {
+                throw new Error('That text isn’t valid JSON. Copy the whole export, including the braces.');
+              }
+              msgs.push(C.importData(obj));
+            }
+            if (!files.length) return finish();
+            let left = files.length;
+            [...files].forEach((f) => {
+              const rd = new FileReader();
+              rd.onload = () => {
+                try {
+                  msgs.push(C.importData(JSON.parse(rd.result)));
+                } catch (e) {
+                  msgs.push(f.name + ': ' + e.message);
+                }
+                if (--left === 0) finish();
+              };
+              rd.readAsText(f);
+            });
+          },
+        },
+      ],
+    });
+  };
+
+  C.openData = function () {
+    const sampleInq = S.inquiry.sample;
+    const nImp = S.imported.assessors.length;
+    C.modal({
+      title: 'Data',
+      body: `<div class="menu-list">
+        ${
+          sampleInq
+            ? `<div class="menu-item"><div><h4>Illustrative panel</h4><p>20 fictional assessors with simulated ratings. Turn off when your real panel is in.</p></div>
+          <button class="switch" role="switch" aria-checked="${S.settings.useSample}" id="d-sample" aria-label="Include illustrative panel"></button></div>`
+            : ''
+        }
+        <div class="menu-item"><div><h4>Export my ratings</h4><p>A small file to send to your facilitator.</p></div><button class="btn-ghost sm" id="d-exp-mine">Export</button></div>
+        <div class="menu-item"><div><h4>Import ratings or an inquiry</h4><p>${nImp} imported assessor${nImp === 1 ? '' : 's'} so far.</p></div><button class="btn-ghost sm" id="d-imp">Import</button></div>
+        <div class="menu-item"><div><h4>Export the whole inquiry</h4><p>Claims, evidence and all ratings, to hand to another team.</p></div><button class="btn-ghost sm" id="d-exp-all">Export</button></div>
+        <div class="menu-item"><div><h4>Start a blank inquiry</h4><p>For your own field. Removes the sample claims from this browser.</p></div><button class="btn-ghost sm" id="d-blank">Start</button></div>
+        <div class="menu-item"><div><h4>Restore the sample</h4><p>Bring back the Alzheimer’s inquiry and clear your ratings and imports.</p></div><button class="btn-ghost sm" id="d-reset">Restore</button></div>
+      </div>`,
+      actions: [{ label: 'Done', primary: true }],
+      onOpen: (el) => {
+        const sw = el.querySelector('#d-sample');
+        if (sw)
+          sw.addEventListener('click', () => {
+            S.settings.useSample = !S.settings.useSample;
+            sw.setAttribute('aria-checked', S.settings.useSample);
+            C.save();
+            route();
+          });
+        el.querySelector('#d-exp-mine').addEventListener('click', () => C.openExport('mine'));
+        el.querySelector('#d-exp-all').addEventListener('click', () => C.openExport('all'));
+        el.querySelector('#d-imp').addEventListener('click', () => C.openImport());
+        el.querySelector('#d-blank').addEventListener('click', () => confirmBlank());
+        el.querySelector('#d-reset').addEventListener('click', () => confirmReset());
+      },
+    });
+  };
+
+  function confirmBlank() {
+    C.modal({
+      title: 'Start a blank inquiry?',
+      body: `<div class="form-row"><label for="b-title">Question your panel will examine</label><input class="field" id="b-title" placeholder="e.g. Is the gut–brain axis a real driver of Parkinson’s?"></div>
+        <div class="form-row"><label for="b-field">Field</label><input class="field" id="b-field" placeholder="e.g. Neurodegeneration · Life sciences"></div>
+        <p class="step-hint">The sample claims and your ratings of them will be removed from this browser. You can restore the sample later.</p>`,
+      actions: [
+        { label: 'Cancel' },
+        {
+          label: 'Start blank inquiry',
+          primary: true,
+          onClick: (el) => {
+            const title = el.querySelector('#b-title').value.trim() || 'Untitled inquiry';
+            S.inquiry = { id: C.uid('inq-'), sample: false, field: el.querySelector('#b-field').value.trim() || 'Inquiry', title, description: '', claims: [] };
+            S.me.ratings = {};
+            S.imported = { assessors: [], ratings: {} };
+            S.settings.revealed = {};
+            C.ui.claimId = null;
+            C.save();
+            location.hash = 'assess';
+            route();
+          },
+        },
+      ],
+    });
+  }
+
+  function confirmReset() {
+    C.modal({
+      title: 'Restore the sample inquiry?',
+      body: `<p class="step-hint">Your ratings, imported assessors and any claims you added will be removed from this browser.</p>`,
+      actions: [
+        { label: 'Cancel' },
+        {
+          label: 'Restore sample',
+          primary: true,
+          onClick: () => {
+            C.resetAll();
+            C.ui.claimId = null;
+            route();
+            C.toast('Sample inquiry restored.');
+          },
+        },
+      ],
+    });
+  }
+
+  /* ---------- global actions ---------- */
+  document.addEventListener('click', (ev) => {
+    const t = ev.target.closest('[data-act]');
+    if (!t) return;
+    if (t.dataset.act === 'open-data') C.openData();
+  });
+
+  route();
+})();
+
+</script>
+  </body>
+</html>

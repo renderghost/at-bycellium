@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Credence</title>
+    <meta name="claude:viewport-fit-sides" content="cover" />
+    <meta name="description" content="Credence: experts weigh evidence for scientific claims; funders see where the field stands and where money would change minds." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    />
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="wrap topbar-inner">
+        <a class="brand" href="#assess" aria-label="Credence home">
+          <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+            <rect width="26" height="26" rx="7" style="fill:var(--ink)" />
+            <line x1="5" y1="17" x2="21" y2="17" style="stroke:var(--bg)" stroke-width="2" stroke-linecap="round" opacity=".45" />
+            <path d="M7 9 L15 9" style="stroke:var(--for)" stroke-width="2.5" stroke-linecap="round" />
+            <path d="M14 6.2 L18 9 L14 11.8 Z" style="fill:var(--for)" />
+            <circle cx="18" cy="17" r="3.2" style="fill:var(--bg)" />
+          </svg>
+          Credence
+          <span class="brand-tag">prototype</span>
+        </a>
+        <nav class="tabs" aria-label="Views">
+          <a class="tab" data-view="assess" href="#assess">Assess <span class="tab-sub">experts</span></a>
+          <a class="tab" data-view="report" href="#report">Report <span class="tab-sub">funders</span></a>
+          <a class="tab" data-view="method" href="#method">Method</a>
+        </nav>
+        <div class="top-actions">
+          <button class="btn-ghost sm" data-act="open-data">Data</button>
+        </div>
+      </div>
+    </header>
+
+    <div id="inq"></div>
+    <main id="main" class="wrap"></main>
+    <footer class="wrap foot">
+      Credence is a design prototype for weighing scientific evidence as a panel. Sample studies are real; sample assessors and ratings are simulated.
+    </footer>
+
+    <div id="modal-root"></div>
+    <div id="tooltip" role="tooltip" hidden></div>
+
+    <script src="js/sample-data.js"></script>
+    <script src="js/model.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/assess.js"></script>
+    <script src="js/report.js"></script>
+    <script src="js/method.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
